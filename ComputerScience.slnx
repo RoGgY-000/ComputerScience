@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ComputerScience.Core/ComputerScience.Core.csproj" />
+  <Project Path="ComputerScience.DataStructures/ComputerScience.DataStructures.csproj" Id="69981fac-9f0e-4ccf-bf8a-ad6f9d6c2d1c" />
+</Solution>
