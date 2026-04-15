@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-
 namespace ComputerScience.DataStructures
 {
     public class MyLinkedList<T> : ICollection<T>, IList<T>
@@ -12,7 +11,7 @@ namespace ComputerScience.DataStructures
             get => first != null ? first.Data : throw new NullReferenceException();
             set
             {
-                if (first == null)
+                if ( first == null )
                 {
                     throw new NullReferenceException();
                 }
@@ -24,7 +23,7 @@ namespace ComputerScience.DataStructures
             get => last != null ? last.Data : throw new NullReferenceException();
             set
             {
-                if (last == null)
+                if ( last == null )
                 {
                     throw new NullReferenceException();
                 }
@@ -35,17 +34,17 @@ namespace ComputerScience.DataStructures
 
         public bool IsReadOnly { get; }
 
-        public MyLinkedList(int length)
+        public MyLinkedList (int length)
         {
-            if (length < 0)
+            if ( length < 0 )
             {
                 throw new ArgumentException("Length cannot be negative!");
             }
-            else if (length == 0)
+            else if ( length == 0 )
             {
                 return;
             }
-            else if (length == 1)
+            else if ( length == 1 )
             {
                 first = new Node(data: default);
                 last = first;
@@ -55,7 +54,7 @@ namespace ComputerScience.DataStructures
                 first = new Node(data: default);
                 Node current = first;
                 Node next;
-                for (int i = 1; i < length; i++)
+                for ( int i = 1; i < length; i++ )
                 {
                     next = new Node(data: default);
                     current.Next = next;
@@ -70,14 +69,14 @@ namespace ComputerScience.DataStructures
         {
             get
             {
-                if (index < 0 || index >= Count)
+                if ( index < 0 || index >= Count )
                 {
                     throw new IndexOutOfRangeException();
                 }
-                if (index < Count / 2)
+                if ( index < Count / 2 )
                 {
                     Node current = first!;
-                    for (int i = 0; i < index; i++)
+                    for ( int i = 0; i < index; i++ )
                     {
                         current = current.Next!;
                     }
@@ -86,7 +85,7 @@ namespace ComputerScience.DataStructures
                 else
                 {
                     Node current = last!;
-                    for (int i = Count - 1; i > index; i--)
+                    for ( int i = Count - 1; i > index; i-- )
                     {
                         current = current.Previous!;
                     }
@@ -95,14 +94,14 @@ namespace ComputerScience.DataStructures
             }
             set
             {
-                if (index < 0 || index >= Count)
+                if ( index < 0 || index >= Count )
                 {
                     throw new IndexOutOfRangeException();
                 }
-                if (index < Count / 2)
+                if ( index < Count / 2 )
                 {
                     Node current = first!;
-                    for (int i = 0; i < index; i++)
+                    for ( int i = 0; i < index; i++ )
                     {
                         current = current.Next!;
                     }
@@ -111,7 +110,7 @@ namespace ComputerScience.DataStructures
                 else
                 {
                     Node current = last!;
-                    for (int i = Count-1; i>index; i--)
+                    for ( int i = Count - 1; i > index; i-- )
                     {
                         current = current.Previous!;
                     }
@@ -120,10 +119,10 @@ namespace ComputerScience.DataStructures
             }
         }
 
-        public void Add(T value)
+        public void Add (T value)
         {
             Node newNode = new(value);
-            if (Count == 0)
+            if ( Count == 0 )
             {
                 first = newNode;
                 last = newNode;
@@ -137,26 +136,26 @@ namespace ComputerScience.DataStructures
             Count++;
         }
 
-        public void Insert(int index, T value)
+        public void Insert (int index, T value)
         {
-            if (index < 0 || index >= Count)
+            if ( index < 0 || index >= Count )
             {
                 throw new IndexOutOfRangeException();
             }
             Node newNode = new(value);
-            if (Count == 1)
+            if ( Count == 1 )
             {
                 first = newNode;
                 last = newNode;
             }
-            else if (index == 0)
+            else if ( index == 0 )
             {
                 first!.Next!.Previous = newNode;
                 newNode.Next = first;
                 first!.Previous = newNode;
                 first = newNode;
             }
-            else if (index == Count - 1)
+            else if ( index == Count - 1 )
             {
                 last!.Previous!.Next = newNode;
                 newNode.Previous = last.Previous;
@@ -175,25 +174,25 @@ namespace ComputerScience.DataStructures
             Count++;
         }
 
-        public void Clear()
+        public void Clear ()
         {
-            if (Count == 0)
+            if ( Count == 0 )
             {
                 return;
             }
-            else if (Count == 1)
+            else if ( Count == 1 )
             {
                 first = null;
                 last = null;
                 return;
             }
             Node current = first!;
-            for (int i = 0; i < Count - 1; i++)
+            for ( int i = 0; i < Count - 1; i++ )
             {
                 current = current.Next!;
                 current.Previous = null;
             }
-            if (last != null)
+            if ( last != null )
             {
                 last = null;
             }
@@ -202,18 +201,18 @@ namespace ComputerScience.DataStructures
 
         public void CopyTo (T[] target, int index)
         {
-            if (target == null)
+            if ( target == null )
             {
                 throw new ArgumentNullException("Target array is null!");
             }
-            else if (target.Length < Count)
+            else if ( target.Length < Count )
             {
                 throw new ArgumentOutOfRangeException("Array length is less than length of list!");
             }
             Node? current = first;
-            for (int i = 0; i < Count; i++)
+            for ( int i = 0; i < Count; i++ )
             {
-                target[i+index] = current!.Data!;
+                target[i + index] = current!.Data!;
                 current = current.Next;
             }
         }
@@ -221,35 +220,35 @@ namespace ComputerScience.DataStructures
         public bool Contains (T value)
         {
             Node? current = first;
-            for (int i = 0; i < Count; i++)
+            for ( int i = 0; i < Count; i++ )
             {
-                if (current != null)
+                if ( current != null )
                 {
-                    if (current.Data!=null
-                    &&current.Data.Equals(value))
+                    if ( current.Data != null
+                    && current.Data.Equals(value) )
                     {
                         return true;
                     }
-                    current=current.Next;
+                    current = current.Next;
                 }
             }
             return false;
         }
 
-        public bool Remove(T value)
+        public bool Remove (T value)
         {
-            if (Count == 0)
+            if ( Count == 0 )
             {
                 throw new IndexOutOfRangeException();
             }
-            else if (First!.Equals(value))
+            else if ( First!.Equals(value) )
             {
                 first = first!.Next;
                 first!.Previous = null;
                 Count--;
                 return true;
             }
-            else if (Last!.Equals(value))
+            else if ( Last!.Equals(value) )
             {
                 last = last!.Previous;
                 last!.Next = null;
@@ -259,10 +258,10 @@ namespace ComputerScience.DataStructures
             else
             {
                 Node current = first!;
-                while (current.Next != null)
+                while ( current.Next != null )
                 {
                     current = current.Next;
-                    if (current.Data!.Equals(value))
+                    if ( current.Data!.Equals(value) )
                     {
                         current.Previous!.Next = current.Next;
                         current.Next!.Previous = current.Previous;
@@ -274,27 +273,73 @@ namespace ComputerScience.DataStructures
             return false;
         }
 
+        public int IndexOf (T value)
+        {
+            if ( Count == 0
+                || first == null )
+            {
+                throw new IndexOutOfRangeException();
+            }
+            int res = 0;
+            Node current = first;
+            while ( current.Data != null
+                && !current.Data.Equals(value) )
+            {
+                if ( current.Next == null )
+                {
+                    return -1;
+                }
+                current = current.Next;
+                res++;
+            }
+            return res;
+        }
 
+        public void RemoveAt (int index)
+        {
+            if ( index < 0 || index >= Count )
+            {
+                throw new IndexOutOfRangeException();
+            }
+            if ( index == 0 )
+            {
+                first = first!.Next;
+            }
+            else if ( index == Count - 1 )
+            {
+                last = last!.Previous;
+            }
+            Node curr = first!;
+            for ( int i = 0; i < Count; i++ )
+            {
+                if ( i == index)
+                {
+                    curr.Previous!.Next = curr.Next;
+                    curr.Next!.Previous = curr.Previous;
+                }
+            }
+            Count--;
+        }
 
-        public IEnumerator<T> GetEnumerator()
+        public IEnumerator<T> GetEnumerator ()
         {
             Node? current = first;
-            while (current != null)
+            while ( current != null )
             {
                 yield return current.Data!;
                 current = current.Next;
             }
         }
-        private Node GetNodeByIndex(int index)
+        private Node GetNodeByIndex (int index)
         {
-            if (index < 0 || index >= Count)
+            if ( index < 0 || index >= Count )
             {
                 throw new IndexOutOfRangeException();
             }
-            if (index < Count / 2)
+            if ( index < Count / 2 )
             {
                 Node current = first!;
-                for (int i = 0; i < index; i++)
+                for ( int i = 0; i < index; i++ )
                 {
                     current = current.Next!;
                 }
@@ -303,7 +348,7 @@ namespace ComputerScience.DataStructures
             else
             {
                 Node current = last!;
-                for (int i = Count - 1; i > index; i--)
+                for ( int i = Count - 1; i > index; i-- )
                 {
                     current = current.Previous!;
                 }
@@ -311,9 +356,9 @@ namespace ComputerScience.DataStructures
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator () => GetEnumerator();
 
-        private class Node(T? data)
+        private class Node (T? data)
         {
             public T? Data { get; set; } = data;
             public Node? Next { get; set; }
