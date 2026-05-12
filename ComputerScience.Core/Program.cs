@@ -1,29 +1,22 @@
 ﻿using ComputerScience.DataStructures;
+using ComputerScience.DataStructures.Graphs;
+using System.Security.Cryptography;
+
 namespace ComputerScience.Core
 {
     internal class Program
     {
         static void Main ()
         {
-            Console.WriteLine("Hello, World!");
-            Console.WriteLine();
-            Dictionary<string, string> list = new();
-            for ( int i = 0; i < 5000000; i++ )
+            int[] from = { 1, 5, 2, 3, 5, };
+            int[] to = { 3, 4, 4, 5, 1 };
+            int[] w = { 5, 4, 3, 2, 1 };
+            DynamicGraph<Empty, Empty> g = new();
+            for ( int i = 0; i < 10; i++ )
             {
-                list.Add("1234567890" + i.ToString(), "1234567890" + i.ToString());
+                g.AddEdge(5, RandomNumberGenerator.GetInt32(0, 100));
             }
-            string c;
-            DateTime start = DateTime.Now;
-            c = list["1234567890" + 2500000.ToString()];
-            Console.WriteLine(DateTime.Now - start);
-            List<string> arr = new(5000000);
-            for ( int i = 0; i < arr.Capacity; i++ )
-            {
-                arr.Add("1234567890" + i.ToString());
-            }
-            start = DateTime.Now;
-            c = arr[2500000];
-            Console.WriteLine(DateTime.Now - start);
+            Console.WriteLine(g);
         }
     }
 }
