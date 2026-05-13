@@ -4,9 +4,9 @@ using System.Text;
 
 namespace ComputerScience.DataStructures.Graphs
 {
-    public class DynamicGraph<TEdgeWeight, TVertexData>
+    public class GraphBuilder<TEdgeWeight, TVertexData>
     {
-        private const int MinCapacity = 4;
+        private const int MinEdgeCapacity = 4;
 
         private int[] heads;
         private int[] counts;
@@ -20,38 +20,18 @@ namespace ComputerScience.DataStructures.Graphs
 
         public int VertexCount { get; private set; }
         public int EdgeCount { get; private set; }
-        public int VertexCapacity { get; private set; }
         public int EdgeCapacity { get; private set; }
 
-        public DynamicGraph (int v = 0, int u = 0)
+        public GraphBuilder (int v = 1, int u = 0)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(v);
             ArgumentOutOfRangeException.ThrowIfNegative(u);
 
-            VertexCount = v;
-            VertexCapacity = MinCapacity;
-            while ( VertexCapacity < VertexCount )
-            {
-                VertexCapacity *= 2;
-            }
-
-            EdgeCount = u;
-            EdgeCapacity = MinCapacity;
-            while ( EdgeCapacity < EdgeCount )
-            {
-                EdgeCapacity *= 2;
-            }
-
             HasVertexData = typeof(TVertexData) != typeof(Empty);
             HasWeight = typeof(TEdgeWeight) != typeof(Empty);
 
-            heads = Array.Empty<int>();
-            counts = Array.Empty<int>();
-            targets = Array.Empty<int>();
-            nexts = Array.Empty<int>();
-
-            SizeUpVertexes();
-            SizeUpEdges();
+            EnsureVertexCount(v);
+            EnsureEdgeCapacity(Math.Max(u, MinEdgeCapacity));
         }
 
         public void AddEdge (int from, int to)
@@ -65,8 +45,7 @@ namespace ComputerScience.DataStructures.Graphs
                 throw new InvalidOperationException();
             }
 
-            EnsureVertexCapacity(Math.Max(from, to)+1);
-
+            EnsureVertexCount(Math.Max(from, to));
             if ( EdgeCount == EdgeCapacity )
             {
                 SizeUpEdges();
@@ -92,8 +71,7 @@ namespace ComputerScience.DataStructures.Graphs
                 throw new InvalidOperationException();
             }
 
-            EnsureVertexCapacity(Math.Max(from, to)+1);
-
+            EnsureVertexCount(Math.Max(from, to)+1);
             if ( EdgeCount == EdgeCapacity )
             {
                 SizeUpEdges();
@@ -108,92 +86,107 @@ namespace ComputerScience.DataStructures.Graphs
             EdgeCount++;
         }
 
-        public void AddVertex ()
+        public void SetVertexData (int v, TVertexData d)
         {
-            if ( HasVertexData
-                || data != null )
-            {
-                throw new InvalidOperationException();
-            }
-
-            if ( VertexCount == VertexCapacity )
-            {
-                SizeUpVertexes();
-            }
-
-            VertexCount++;
-        }
-
-        public void AddVertex (TVertexData d)
-        {
+            ArgumentOutOfRangeException.ThrowIfNegative(v);
             ArgumentNullException.ThrowIfNull(d);
-
             if ( !HasVertexData
                 || data == null )
             {
                 throw new InvalidOperationException();
             }
-
-            ArgumentNullException.ThrowIfNull(d);
-
-            if ( VertexCount == VertexCapacity )
-            {
-                SizeUpVertexes();
-            }
-
-            data[VertexCount] = d;
-            VertexCount++;
+            EnsureVertexCount(v+1);
+            data[v] = d;
         }
 
-        public StaticGraph<TEdgeWeight, TVertexData> ToStaticGraph ()
+        public Graph<TEdgeWeight, TVertexData> Build ()
         {
-            int[] from = new int[EdgeCount];
-            int[] to = new int[EdgeCount];
+            int[] offsets = new int[VertexCount + 1];
+            int[] targets = new int[EdgeCount];
+            offsets[VertexCount] = EdgeCount;
+
             TEdgeWeight[]? newWeights = null;
-            if ( HasWeight )
+            if ( HasWeight
+                && weights != null )
             {
                 newWeights = new TEdgeWeight[EdgeCount];
             }
-            int nextFree = 0, currNode = 0,  prevNode = 0, lastTarget = 0;
-            for ( int i = 0; i < VertexCount; i++ )
-            {
-                currNode = heads[i];
-                for ( int j = 0; j < counts[i]; j++ )
-                {
-                    lastTarget = targets[currNode];
-                    prevNode = nexts[currNode];
-                    from[nextFree] = i;
-                    to[nextFree] = lastTarget;
 
+            offsets[0] = 0;
+            int pointer = heads[0];
+
+            for ( int i = 0; i < counts[0]; i++ )
+            {
+                targets[i] = this.targets[pointer];
+                pointer = nexts[pointer];
+            }
+
+            for ( int i = 1; i < VertexCount; i++ )
+            {
+                offsets[i] = offsets[i - 1] + counts[i - 1];
+                pointer = heads[i];
+                for ( int j = 1; j < counts[i]; j++ )
+                {
+                    targets[offsets[i] + j] = this.targets[pointer];
+                    pointer = nexts[pointer];
                     if ( HasWeight )
                     {
-                        newWeights![nextFree] = weights![currNode];
+                        newWeights![offsets[i] + j] = weights![pointer];
                     }
-
-                    currNode = prevNode;
-                    nextFree++;
                 }
             }
-            StaticGraph<TEdgeWeight, TVertexData> g = new(VertexCount, from, to, newWeights, data);
+            Graph<TEdgeWeight, TVertexData> g = new(offsets, targets, newWeights, data);
             return g;
         }
 
-        private void EnsureVertexCapacity (int capacity)
+        private void EnsureEdgeCapacity (int capacity)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(capacity);
 
-            if ( VertexCapacity < capacity )
+            if ( EdgeCapacity < capacity )
             {
-                VertexCapacity = capacity;
+                EdgeCapacity = capacity;
+                Array.Resize(ref targets, EdgeCapacity);
+                Array.Resize(ref nexts, EdgeCapacity);
 
-                Array.Resize(ref heads, VertexCapacity);
-                Array.Resize(ref counts, VertexCapacity);
-                FullArray(heads, -1);
-
-                if ( HasVertexData
-                    && data != null )
+                if ( HasWeight )
                 {
-                    Array.Resize(ref data, VertexCapacity);
+                    Array.Resize(ref weights, EdgeCapacity);
+                }
+            }
+            else
+            {
+                targets ??= new int[EdgeCapacity];
+                nexts ??= new int[EdgeCapacity];
+                if ( HasWeight )
+                {
+                    weights ??= new TEdgeWeight[EdgeCapacity];
+                }
+            }
+        }
+
+        private void EnsureVertexCount (int capacity)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(capacity);
+
+            if ( VertexCount < capacity )
+            {
+                VertexCount = capacity;
+                Array.Resize(ref heads, VertexCount);
+                Array.Resize(ref counts, VertexCount);
+
+                if ( HasVertexData )
+                {
+                    Array.Resize(ref data, VertexCount);
+                }
+            }
+            else
+            {
+                heads ??= new int[VertexCount];
+                counts ??= new int[VertexCount];
+                if ( HasVertexData )
+                {
+                    data ??= new TVertexData[VertexCount];
                 }
             }
         }
@@ -204,8 +197,8 @@ namespace ComputerScience.DataStructures.Graphs
 
             for ( int i = 0; i < arr.Length; i++ )
             {
-                if ( counts[i] == 0)
-                { 
+                if ( counts[i] == 0 )
+                {
                     arr[i] = value;
                 }
             }
@@ -213,16 +206,16 @@ namespace ComputerScience.DataStructures.Graphs
 
         private void SizeUpVertexes ()
         {
-            VertexCapacity *= 2;
+            VertexCount *= 2;
 
-            Array.Resize(ref heads, VertexCapacity);
-            Array.Resize(ref counts, VertexCapacity);
+            Array.Resize(ref heads, VertexCount);
+            Array.Resize(ref counts, VertexCount);
             FullArray(heads, -1);
 
             if ( HasVertexData
                 && data != null )
             {
-                Array.Resize(ref data, VertexCapacity);
+                Array.Resize(ref data, VertexCount);
             }
         }
 
