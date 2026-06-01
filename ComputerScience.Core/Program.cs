@@ -1,6 +1,8 @@
 ﻿using ComputerScience.DataStructures;
 using ComputerScience.DataStructures.Graphs;
+using ComputerScience.DataStructures.Graphs.Algorithms;
 using System.Security.Cryptography;
+using System.Collections;
 
 namespace ComputerScience.Core
 {
@@ -8,28 +10,24 @@ namespace ComputerScience.Core
     {
         static void Main ()
         {
-            DateTime start = DateTime.Now;
-            GraphBuilder<int, int> g = new(1, 1);
+			GraphBuilder<Empty, Empty> g = new(100, 100);
             for ( int i = 0; i < 100; i++ )
             {
-                for ( int j = 0; j < 100; j++ )
-                {
-                    for ( int k = 1; k < 100; k++ )
-                    {
-                        g = new(i, j);
-                        for ( int i2 = 0; i2 < 100; i2++ )
-                        {
-                            g.SetVertexData(i2, i2 + 1);
-                        }
-                        for ( int i2 = 0; i2 < 10000; i2++ )
-                        {
-                            g.AddEdge(RandomNumberGenerator.GetInt32(0, k), RandomNumberGenerator.GetInt32(0, k), 1000 - k);
-                        }
-                    }
-                }
+                g.AddEdge(RandomNumberGenerator.GetInt32(0, 100), RandomNumberGenerator.GetInt32(0, 100));
             }
-            Graph<int, int> sg = g.Build();
-            Console.WriteLine(DateTime.Now-start);
+
+            DateTime start = DateTime.Now;
+            Graph<Empty, Empty> sg = g.Build(new GraphBuildingOptions().AlwaysReflexiveEdges().GetOptions());
+
+            //Console.WriteLine(sg);
+            Console.WriteLine(DateTime.Now - start);
+
+            start = DateTime.Now;
+            Graph<Empty, Empty> sg1 = sg.BFSGetReachableFrom(10);
+            Console.WriteLine(DateTime.Now - start);
+
+            Console.WriteLine(sg1);
+            Console.WriteLine(GC.GetAllocatedBytesForCurrentThread());
         }
     }
 }

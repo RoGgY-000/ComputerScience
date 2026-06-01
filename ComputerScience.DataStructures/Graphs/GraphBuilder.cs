@@ -6,10 +6,11 @@ namespace ComputerScience.DataStructures.Graphs
 {
     public class GraphBuilder<TEdgeWeight, TVertexData>
     {
-        private const int MinEdgeCapacity = 4;
+        private const int MinCapacity = 4;
+
+        private int vertexCapacity;
 
         private int[] heads;
-        private int[] counts;
         private int[] targets;
         private int[] nexts;
         private TEdgeWeight[]? weights;
@@ -31,7 +32,7 @@ namespace ComputerScience.DataStructures.Graphs
             HasWeight = typeof(TEdgeWeight) != typeof(Empty);
 
             EnsureVertexCount(v);
-            EnsureEdgeCapacity(Math.Max(u, MinEdgeCapacity));
+            EnsureEdgeCapacity(Math.Max(u, MinCapacity));
         }
 
         public void AddEdge (int from, int to)
@@ -45,16 +46,12 @@ namespace ComputerScience.DataStructures.Graphs
                 throw new InvalidOperationException();
             }
 
-            EnsureVertexCount(Math.Max(from, to));
-            if ( EdgeCount == EdgeCapacity )
-            {
-                SizeUpEdges();
-            }
+            EnsureVertexCount(Math.Max(from, to)+1);
+            EnsureEdgeCapacity(EdgeCount + 1);
 
             targets[EdgeCount] = to;
             nexts[EdgeCount] = heads[from];
             heads[from] = EdgeCount;
-            counts[from]++;
 
             EdgeCount++;
         }
@@ -80,7 +77,6 @@ namespace ComputerScience.DataStructures.Graphs
             targets[EdgeCount] = to;
             nexts[EdgeCount] = heads[from];
             heads[from] = EdgeCount;
-            counts[from]++;
             weights[EdgeCount] = w;
 
             EdgeCount++;
@@ -99,12 +95,11 @@ namespace ComputerScience.DataStructures.Graphs
             data[v] = d;
         }
 
-        public Graph<TEdgeWeight, TVertexData> Build ()
+        public Graph<TEdgeWeight, TVertexData> Build (GraphBuildingOptionsFixed options)
         {
-            int[] offsets = new int[VertexCount + 1];
+            int[] offsets = new int[VertexCount+1];
             int[] targets = new int[EdgeCount];
             offsets[VertexCount] = EdgeCount;
-
             TEdgeWeight[]? newWeights = null;
             if ( HasWeight
                 && weights != null )
@@ -112,30 +107,49 @@ namespace ComputerScience.DataStructures.Graphs
                 newWeights = new TEdgeWeight[EdgeCount];
             }
 
-            offsets[0] = 0;
-            int pointer = heads[0];
+            bool addReflexive = !options.alwaysReflexiveEdges && options.enableReflexiveEdges;
 
-            for ( int i = 0; i < counts[0]; i++ )
+			offsets[0] = 0;
+            int pointer = heads[0];
+            int current = 0;
+            while ( pointer != -1 )
             {
-                targets[i] = this.targets[pointer];
+                if ( addReflexive
+					|| (options.alwaysReflexiveEdges
+                    && this.targets[pointer] != 0))
+                {
+                    targets[current] = this.targets[pointer];
+                    current++;
+                    if ( HasWeight )
+                    {
+                        newWeights![current] = weights![pointer];
+                    }
+                }
                 pointer = nexts[pointer];
             }
 
             for ( int i = 1; i < VertexCount; i++ )
             {
-                offsets[i] = offsets[i - 1] + counts[i - 1];
+                offsets[i] = offsets[i - 1] + current;
                 pointer = heads[i];
-                for ( int j = 1; j < counts[i]; j++ )
+                current = 0;
+                while ( pointer != -1 )
                 {
-                    targets[offsets[i] + j] = this.targets[pointer];
-                    pointer = nexts[pointer];
-                    if ( HasWeight )
+                    if ( addReflexive
+					    || (options.alwaysReflexiveEdges
+					    && this.targets[pointer] != i) )
                     {
-                        newWeights![offsets[i] + j] = weights![pointer];
+                        targets[offsets[i] + current] = this.targets[pointer];
+                        current++;
+                        if ( HasWeight )
+                        {
+                            newWeights![offsets[i] + current] = weights![pointer];
+                        }
                     }
+                    pointer = nexts[pointer];
                 }
             }
-            Graph<TEdgeWeight, TVertexData> g = new(offsets, targets, newWeights, data);
+            Graph<TEdgeWeight, TVertexData> g = new(offsets, targets, options, newWeights, data);
             return g;
         }
 
@@ -143,80 +157,101 @@ namespace ComputerScience.DataStructures.Graphs
         {
             ArgumentOutOfRangeException.ThrowIfNegative(capacity);
 
-            if ( EdgeCapacity < capacity )
+            if ( capacity <= EdgeCapacity )
             {
-                EdgeCapacity = capacity;
-                Array.Resize(ref targets, EdgeCapacity);
-                Array.Resize(ref nexts, EdgeCapacity);
-
-                if ( HasWeight )
-                {
-                    Array.Resize(ref weights, EdgeCapacity);
-                }
+                return;
             }
             else
             {
-                targets ??= new int[EdgeCapacity];
-                nexts ??= new int[EdgeCapacity];
-                if ( HasWeight )
+                EdgeCapacity = MinCapacity;
+                while ( EdgeCapacity < capacity )
                 {
-                    weights ??= new TEdgeWeight[EdgeCapacity];
+                    EdgeCapacity *= 2;
                 }
-            }
+				Array.Resize(ref targets, EdgeCapacity);
+				Array.Resize(ref nexts, EdgeCapacity);
+                FullArray(nexts, EdgeCount, EdgeCapacity, -1);
+
+				if ( HasWeight )
+				{
+					Array.Resize(ref weights, EdgeCapacity);
+				}
+			}
+
+            //if ( EdgeCapacity < capacity )
+            //{
+            //    EdgeCapacity = capacity;
+            //    Array.Resize(ref targets, EdgeCapacity);
+            //    Array.Resize(ref nexts, EdgeCapacity);
+
+            //    if ( HasWeight )
+            //    {
+            //        Array.Resize(ref weights, EdgeCapacity);
+            //    }
+            //}
+            //else
+            //{
+            //    targets ??= new int[EdgeCapacity];
+            //    nexts ??= new int[EdgeCapacity];
+            //    if ( HasWeight )
+            //    {
+            //        weights ??= new TEdgeWeight[EdgeCapacity];
+            //    }
+            //}
         }
 
-        private void EnsureVertexCount (int capacity)
+        private void EnsureVertexCount (int count)
         {
-            ArgumentOutOfRangeException.ThrowIfNegative(capacity);
+            ArgumentOutOfRangeException.ThrowIfNegative(count);
 
-            if ( VertexCount < capacity )
+            if ( count <= VertexCount )
             {
-                VertexCount = capacity;
-                Array.Resize(ref heads, VertexCount);
-                Array.Resize(ref counts, VertexCount);
-
-                if ( HasVertexData )
-                {
-                    Array.Resize(ref data, VertexCount);
-                }
+                return;
+            }
+            else if (count <= vertexCapacity)
+            {
+                VertexCount = count;
             }
             else
             {
-                heads ??= new int[VertexCount];
-                counts ??= new int[VertexCount];
-                if ( HasVertexData )
-                {
-                    data ??= new TVertexData[VertexCount];
-                }
-            }
-        }
+                vertexCapacity = MinCapacity;
+				while ( vertexCapacity < count )
+				{
+					vertexCapacity *= 2;
+				}
+				Array.Resize(ref heads, vertexCapacity);
+                FullArray(heads, VertexCount, vertexCapacity, -1);
 
-        private void FullArray (int[] arr, int value)
-        {
-            ArgumentNullException.ThrowIfNull(arr);
+				if ( HasVertexData )
+				{
+					Array.Resize(ref data, VertexCount);
+				}
+                VertexCount = count;
+			}
 
-            for ( int i = 0; i < arr.Length; i++ )
-            {
-                if ( counts[i] == 0 )
-                {
-                    arr[i] = value;
-                }
-            }
-        }
+            //if ( VertexCount < count )
+            //{
+            //    while ( VertexCount < count )
+            //    {
+            //        VertexCount *= 2;
+            //    }
+            //    Array.Resize(ref heads, VertexCount);
+            //    Array.Resize(ref counts, VertexCount);
 
-        private void SizeUpVertexes ()
-        {
-            VertexCount *= 2;
-
-            Array.Resize(ref heads, VertexCount);
-            Array.Resize(ref counts, VertexCount);
-            FullArray(heads, -1);
-
-            if ( HasVertexData
-                && data != null )
-            {
-                Array.Resize(ref data, VertexCount);
-            }
+            //    if ( HasVertexData )
+            //    {
+            //        Array.Resize(ref data, VertexCount);
+            //    }
+            //}
+            //else
+            //{
+            //    heads ??= new int[VertexCount];
+            //    counts ??= new int[VertexCount];
+            //    if ( HasVertexData )
+            //    {
+            //        data ??= new TVertexData[VertexCount];
+            //    }
+            //}
         }
 
         private void SizeUpEdges ()
@@ -230,6 +265,14 @@ namespace ComputerScience.DataStructures.Graphs
                 && weights != null )
             {
                 Array.Resize(ref weights, EdgeCapacity);
+            }
+        }
+
+        private void FullArray (int[] arr, int start, int end, int value)
+        {
+            for ( int i = start; i < end; i++ )
+            {
+                arr[i] = value;
             }
         }
     }
