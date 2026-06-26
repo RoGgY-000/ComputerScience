@@ -1,33 +1,80 @@
-﻿using ComputerScience.DataStructures;
-using ComputerScience.DataStructures.Graphs;
-using ComputerScience.DataStructures.Graphs.Algorithms;
+﻿using ComputerScience.DataStructures.Graphs;
 using System.Security.Cryptography;
-using System.Collections;
 
 namespace ComputerScience.Core
 {
-    internal class Program
+    public class Program
     {
-        static void Main ()
+        public static void Main ()
         {
-			GraphBuilder<Empty, Empty> g = new(100, 100);
-            for ( int i = 0; i < 100; i++ )
+            for ( int k = 0; k < 10; k++ )
             {
-                g.AddEdge(RandomNumberGenerator.GetInt32(0, 100), RandomNumberGenerator.GetInt32(0, 100));
-            }
+                GraphBuilder<Empty, Empty> gb = new(1000, 4995);
+                for ( int i = 0; i < 4995; i++ )
+                {
+                    gb.AddEdge(RandomNumberGenerator.GetInt32(1000), RandomNumberGenerator.GetInt32(1000));
+                }
+                DateTime start = DateTime.Now;
+                Graph<Empty, Empty> g = gb.Build(GraphBuildingOptions.Default);
+                Console.WriteLine(DateTime.Now - start);
 
-            DateTime start = DateTime.Now;
-            Graph<Empty, Empty> sg = g.Build(new GraphBuildingOptions().AlwaysReflexiveEdges().GetOptions());
+                int dfs = 0, bfs = 0;
+                start = DateTime.Now;
+                Parallel.For(0, g.VertexCount, (int i) =>
+                {
+                    for ( int j = 0; j < g.VertexCount; j++ )
+                    {
+                        if ( g.DFSIsReachable(i, j) )
+                        {
+                            dfs++;
+                        }
+                    }
+                });
+                Console.WriteLine(DateTime.Now - start);
+                start = DateTime.Now;
+                Parallel.For(0, g.VertexCount, (int i) =>
+                {
+                    for ( int j = 0; j < g.VertexCount; j++ )
+                    {
+                        if ( g.BFSIsReachable(i, j) )
+                        {
+                            bfs++;
+                        }
+                    }
+                });
+                Console.WriteLine(DateTime.Now - start);
+                Console.WriteLine(dfs);
+                Console.WriteLine(bfs);
 
-            //Console.WriteLine(sg);
-            Console.WriteLine(DateTime.Now - start);
-
-            start = DateTime.Now;
-            Graph<Empty, Empty> sg1 = sg.BFSGetReachableFrom(10);
-            Console.WriteLine(DateTime.Now - start);
-
-            Console.WriteLine(sg1);
-            Console.WriteLine(GC.GetAllocatedBytesForCurrentThread());
-        }
-    }
+                dfs = 0; 
+                bfs = 0;
+				start = DateTime.Now;
+                for ( int i = 0; i < g.VertexCount; i++ )
+				{
+					for ( int j = 0; j < g.VertexCount; j++ )
+					{
+						if ( g.DFSIsReachable(i, j) )
+						{
+							dfs++;
+						}
+					}
+				}
+				Console.WriteLine(DateTime.Now - start);
+				start = DateTime.Now;
+			for ( int i = 0; i < g.VertexCount; i++ )
+			{
+					for ( int j = 0; j < g.VertexCount; j++ )
+					{
+						if ( g.BFSIsReachable(i, j) )
+						{
+							bfs++;
+						}
+					}
+				}
+				Console.WriteLine(DateTime.Now - start);
+				Console.WriteLine(dfs);
+				Console.WriteLine(bfs);
+			}
+		}
+	}
 }

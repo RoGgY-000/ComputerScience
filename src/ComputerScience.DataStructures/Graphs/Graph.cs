@@ -1,30 +1,145 @@
-﻿using System;
-using System.Buffers;
+﻿using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace ComputerScience.DataStructures.Graphs
 {
-    public class Graph<TEdgeWeight, TVertexData>
+	public class Graph<TEdgeWeight, TVertexData>
     {
         private readonly int[] offsets;
         private readonly int[] targets;
         private readonly TEdgeWeight[]? weights;
         private readonly TVertexData[]? data;
 
-        private ArrayPool<int> intPool;
+        private readonly ArrayPool<int> intPool = ArrayPool<int>.Shared;
+
+		private readonly GraphBuildingOptionsFixed options;
 
         public int VertexCount { get; }
         public int EdgeCount { get; }
         public bool HasWeight { get; }
         public bool HasVertexData { get; }
 
-        private readonly GraphBuildingOptionsFixed options;
-        public bool IsAlwaysReflexive { get; }
-        public bool AllowReflexiveEdges { get; }
-        public bool AllowDuplicateEdges { get; }
+        public bool IsAlwaysReflexive => options.alwaysReflexiveEdges;
+        public bool AllowReflexiveEdges => options.enableReflexiveEdges;
+        public bool AllowDuplicateEdges => options.enableDuplicateEdges;
 
-        internal Graph (int v, int[] from, int[] to, TEdgeWeight[]? w = null, TVertexData[]? d = null)
+        public int ReflexiveEdgeCount
+        {
+            get
+            {
+                if ( field != -1 )
+                {
+                    return field;
+                }
+                int res = 0;
+                for ( int vertex = 0; vertex < VertexCount; vertex++ )
+                {
+                    ReadOnlySpan<int> neighbors = GetNeighbors(vertex);
+                    foreach ( int neighbor in neighbors )
+                    {
+                        if ( vertex == neighbor )
+                        {
+                            res++;
+                        }
+                    }
+                }
+                field = res;
+                return field;
+            }
+        } = -1;
+        public int DuplicateEdgeCount
+        {
+            get
+            {
+                if ( field != -1 )
+                {
+                    return field;
+                }
+                int res = 0;
+                int[] uniqueNeighbors = intPool.Rent(MaxVertexDegree);
+                int[] edgeCountPerNeighbor = intPool.Rent(MaxVertexDegree);
+                try
+                {
+                    for ( int vertex = 0; vertex < VertexCount; vertex++ )
+                    {
+                        int uniqueNeighborCount = 0;
+                        uniqueNeighbors.AsSpan(0, MaxVertexDegree).Fill(-1);
+                        edgeCountPerNeighbor.AsSpan(0, MaxVertexDegree).Clear();
+                        ReadOnlySpan<int> neighbors = GetNeighbors(vertex);
+                        foreach ( int neighbor in neighbors )
+                        {
+                            bool found = false;
+                            for ( int index = 0; index < uniqueNeighbors.Length && !found; index++ )
+                            {
+                                if ( uniqueNeighbors[index] == -1 )
+                                {
+                                    uniqueNeighbors[index] = neighbor;
+                                    uniqueNeighborCount++;
+                                    edgeCountPerNeighbor[index]++;
+                                    found = true;
+                                }
+                                else if ( uniqueNeighbors[index] == neighbor )
+                                {
+                                    edgeCountPerNeighbor[index]++;
+                                    found = true;
+                                }
+                            }
+                        }
+                        for ( int neighborIndex = 0; neighborIndex < uniqueNeighborCount; neighborIndex++ )
+                        {
+                            res += edgeCountPerNeighbor[neighborIndex] - 1;
+                        }
+                    }
+                }
+                finally
+                {
+                    intPool.Return(uniqueNeighbors);
+                    intPool.Return(edgeCountPerNeighbor);
+                }
+                field = res;
+                return field;
+            }
+        } = -1;
+        public float AverageVertexDegree
+        {
+            get
+            {
+                if (field != -1f)
+                {
+                    return field;
+                }
+                float totalDegrees = 0;
+                for ( int vertex = 0; vertex < VertexCount; vertex++ )
+                {
+                    totalDegrees += offsets[vertex + 1] - offsets[vertex];
+                }
+                field = totalDegrees / VertexCount;
+				return field;
+            }
+        } = -1f;
+        public int MaxVertexDegree
+        {
+            get
+            {
+                if ( field != -1f )
+                {
+                    return field;
+                }
+                int max = 0;
+                for ( int vertex = 0; vertex < VertexCount; vertex++ )
+                {
+                    int neighborCount = offsets[vertex + 1] - offsets[vertex];
+
+                    max = Math.Max(max, neighborCount);
+                }
+                field = max;
+                return field;
+            }
+        } = -1;
+        public float Density => (float) EdgeCount / (VertexCount * (VertexCount - 1));
+
+		internal Graph (int v, int[] from, int[] to, TEdgeWeight[]? w = null, TVertexData[]? d = null)
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(v);
             ArgumentOutOfRangeException.ThrowIfNotEqual(from.Length, to.Length);
@@ -40,8 +155,6 @@ namespace ComputerScience.DataStructures.Graphs
                 ArgumentNullException.ThrowIfNull(d);
                 ArgumentOutOfRangeException.ThrowIfNotEqual(v, d.Length);
             }
-
-            intPool = ArrayPool<int>.Shared;
 
             int u = from.Length;
 
@@ -115,8 +228,6 @@ namespace ComputerScience.DataStructures.Graphs
                 this.data = data;
             }
 
-            intPool = ArrayPool<int>.Shared;
-
             this.offsets = offsets;
             this.targets = targets;
 
@@ -124,9 +235,6 @@ namespace ComputerScience.DataStructures.Graphs
             EdgeCount = targets.Length;
 
             this.options = options;
-            IsAlwaysReflexive = options.alwaysReflexiveEdges;
-            AllowReflexiveEdges = options.enableReflexiveEdges;
-            AllowDuplicateEdges = options.enableDuplicateEdges;
         }
 
         public override string ToString ()
@@ -283,7 +391,7 @@ namespace ComputerScience.DataStructures.Graphs
             {
                 GraphBuilder<TEdgeWeight, TVertexData> builder = new(1, EdgeCount);
 				Enqueue(v);
-                while ( qEnd - qStart > 0 )
+                while ( qEnd > qStart )
                 {
                     int curr = Dequeue();
                     visited[curr] = 1;
@@ -322,34 +430,112 @@ namespace ComputerScience.DataStructures.Graphs
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void BFSAll (Action<int> action)
 		{
-			Queue<int> queue = new(VertexCount);
-			bool[] visited = new bool[VertexCount];
-			int visitedCount = 0;
-			for ( int i = 0; i < visited.Length; i++ )
+			int visitedCount = 0, qStart = 0, qEnd = 0;
+			int[] queue = intPool.Rent(VertexCount);
+			int[] visited = intPool.Rent(VertexCount);
+            try
+            {
+                for ( int i = 0; i < VertexCount; i++ )
+                {
+                    if ( visited[i] == 0 )
+                    {
+                        Enqueue(i);
+                        while ( qEnd > qStart )
+                        {
+                            int curr = Dequeue();
+                            if ( visited[curr] == 0 )
+                            {
+                                action(curr);
+                                visited[curr] = 1;
+                                visitedCount++;
+                                ReadOnlySpan<int> neighbors = GetNeighbors(curr);
+                                for ( int j = 0; j < neighbors.Length; j++ )
+                                {
+                                    if ( visited[neighbors[j]] == 0 )
+                                    {
+                                        Enqueue(neighbors[j]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            finally
+            {
+				intPool.Return(queue);
+				intPool.Return(visited);
+			}
+            void Enqueue (int el)
 			{
-				if ( !visited[i] )
-				{
-					queue.Enqueue(i);
-					while ( queue.Count > 0 )
-					{
-						int curr = queue.Dequeue();
-						if ( !visited[curr] )
-						{
-							action(curr);
-							visited[curr] = true;
-							visitedCount++;
-							ReadOnlySpan<int> neighbors = GetNeighbors(curr);
-							for ( int j = 0; j < neighbors.Length; j++ )
-							{
-								if ( !visited[neighbors[j]] )
-								{
-									queue.Enqueue(neighbors[j]);
-								}
-							}
-						}
-					}
-				}
+				queue[qEnd++] = el;
+			}
+			int Dequeue ()
+			{
+				return queue[qStart++];
 			}
 		}
-	}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool DFSIsReachable (int start, int end)
+        {
+			ArgumentOutOfRangeException.ThrowIfNegative(start);
+			ArgumentOutOfRangeException.ThrowIfGreaterThan(start, VertexCount);
+			ArgumentOutOfRangeException.ThrowIfNegative(end);
+			ArgumentOutOfRangeException.ThrowIfGreaterThan(end, VertexCount);
+
+			if ( IsAlwaysReflexive
+				&& start == end )
+			{
+				return true;
+			}
+
+            int stackEnd = 0;
+			bool found = false;
+			int[] visited = intPool.Rent(VertexCount);
+			int[] stack = intPool.Rent(VertexCount);
+			visited.AsSpan(0, VertexCount).Clear();
+			stack.AsSpan(0, VertexCount).Clear();
+
+            try
+            {
+                Push(start);
+                while ( stackEnd > 0 && !found )
+                {
+                    int curr = Pop();
+                    if ( visited[curr] <= 1 )
+                    {
+                        visited[curr] = 2;
+                        ReadOnlySpan<int> neighbors = GetNeighbors(curr);
+                        for ( int i = 0; i < neighbors.Length && !found; i++ )
+                        {
+                            if ( neighbors[i] == end )
+                            {
+                                found = true;
+                            }
+                            else if ( visited[neighbors[i]] == 0 )
+                            {
+                                visited[neighbors[i]] = 1;
+                                Push(neighbors[i]);
+                            }
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                intPool.Return(visited);
+                intPool.Return(stack);
+            }
+            return found;
+            void Push (int el)
+            {
+                stack[stackEnd++] = el;
+            }
+            int Pop ()
+            {
+                return stack[--stackEnd];
+            }
+        }
+    }
 }

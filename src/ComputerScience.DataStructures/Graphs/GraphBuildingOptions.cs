@@ -10,7 +10,7 @@ namespace ComputerScience.DataStructures.Graphs
 		private bool enableReflexiveEdges = true;
 		private bool enableDuplicateEdges = true;
 
-		public static GraphBuildingOptionsFixed Default { get; } = new GraphBuildingOptions().GetOptions();
+		public static GraphBuildingOptionsFixed Default { get; } = new GraphBuildingOptions().Fix();
 
 		public GraphBuildingOptions AlwaysReflexiveEdges ()
 		{
@@ -43,7 +43,7 @@ namespace ComputerScience.DataStructures.Graphs
 			return this;
 		}
 
-		public GraphBuildingOptionsFixed GetOptions ()
+		public GraphBuildingOptionsFixed Fix ()
 		{
 			GraphBuildingOptionsFixed options = new(alwaysReflexiveEdges, enableReflexiveEdges, enableDuplicateEdges);
 			return options;

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using BenchmarkDotNet.Attributes;
 
 namespace ComputerScience.DataStructures.Graphs
 {
-    public class GraphBuilder<TEdgeWeight, TVertexData>
+	public class GraphBuilder<TEdgeWeight, TVertexData>
     {
         private const int MinCapacity = 4;
 
@@ -177,27 +178,6 @@ namespace ComputerScience.DataStructures.Graphs
 					Array.Resize(ref weights, EdgeCapacity);
 				}
 			}
-
-            //if ( EdgeCapacity < capacity )
-            //{
-            //    EdgeCapacity = capacity;
-            //    Array.Resize(ref targets, EdgeCapacity);
-            //    Array.Resize(ref nexts, EdgeCapacity);
-
-            //    if ( HasWeight )
-            //    {
-            //        Array.Resize(ref weights, EdgeCapacity);
-            //    }
-            //}
-            //else
-            //{
-            //    targets ??= new int[EdgeCapacity];
-            //    nexts ??= new int[EdgeCapacity];
-            //    if ( HasWeight )
-            //    {
-            //        weights ??= new TEdgeWeight[EdgeCapacity];
-            //    }
-            //}
         }
 
         private void EnsureVertexCount (int count)
@@ -228,30 +208,6 @@ namespace ComputerScience.DataStructures.Graphs
 				}
                 VertexCount = count;
 			}
-
-            //if ( VertexCount < count )
-            //{
-            //    while ( VertexCount < count )
-            //    {
-            //        VertexCount *= 2;
-            //    }
-            //    Array.Resize(ref heads, VertexCount);
-            //    Array.Resize(ref counts, VertexCount);
-
-            //    if ( HasVertexData )
-            //    {
-            //        Array.Resize(ref data, VertexCount);
-            //    }
-            //}
-            //else
-            //{
-            //    heads ??= new int[VertexCount];
-            //    counts ??= new int[VertexCount];
-            //    if ( HasVertexData )
-            //    {
-            //        data ??= new TVertexData[VertexCount];
-            //    }
-            //}
         }
 
         private void SizeUpEdges ()

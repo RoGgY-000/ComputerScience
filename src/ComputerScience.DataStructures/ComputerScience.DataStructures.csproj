@@ -10,4 +10,8 @@
     <Folder Include="Graphs\Interfaces\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+  </ItemGroup>
+
 </Project>
