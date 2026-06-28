@@ -109,7 +109,7 @@ namespace ComputerScience.DataStructures.Graphs
                 {
                     return field;
                 }
-                field = EdgeCount / VertexCount;
+                field = (float) EdgeCount / VertexCount;
 				return field;
             }
         } = -1f;
