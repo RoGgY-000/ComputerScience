@@ -109,12 +109,7 @@ namespace ComputerScience.DataStructures.Graphs
                 {
                     return field;
                 }
-                float totalDegrees = 0;
-                for ( int vertex = 0; vertex < VertexCount; vertex++ )
-                {
-                    totalDegrees += offsets[vertex + 1] - offsets[vertex];
-                }
-                field = totalDegrees / VertexCount;
+                field = EdgeCount / VertexCount;
 				return field;
             }
         } = -1f;
