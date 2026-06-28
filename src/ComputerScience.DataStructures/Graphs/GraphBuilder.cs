@@ -168,7 +168,7 @@ namespace ComputerScience.DataStructures.Graphs
                 }
 				Array.Resize(ref targets, EdgeCapacity);
 				Array.Resize(ref nexts, EdgeCapacity);
-                FullArray(nexts, EdgeCount, EdgeCapacity, -1);
+                nexts.AsSpan(EdgeCount, EdgeCapacity - EdgeCount).Fill(-1);
 
 				if ( HasWeight )
 				{
@@ -197,7 +197,7 @@ namespace ComputerScience.DataStructures.Graphs
 					vertexCapacity *= 2;
 				}
 				Array.Resize(ref heads, vertexCapacity);
-                FullArray(heads, VertexCount, vertexCapacity, -1);
+                heads.AsSpan(VertexCount, vertexCapacity - VertexCount).Fill(-1);
 
 				if ( HasVertexData )
 				{
@@ -205,14 +205,6 @@ namespace ComputerScience.DataStructures.Graphs
 				}
                 VertexCount = count;
 			}
-        }
-
-        private void FullArray (int[] arr, int start, int end, int value)
-        {
-            for ( int i = start; i < end; i++ )
-            {
-                arr[i] = value;
-            }
         }
     }
 }
