@@ -405,7 +405,7 @@ namespace ComputerScience.DataStructures.Graphs
 							visited[neighbors[i]] = 1;
 						}
 
-                        builder.AddEdge(newVertexes[curr], newVertexes[neighbors[i]]);
+                        builder.AddArc(newVertexes[curr], newVertexes[neighbors[i]]);
                     }
                 }
                 return builder.Build(options);

@@ -36,7 +36,7 @@ namespace ComputerScience.DataStructures.Graphs
             EnsureEdgeCapacity(Math.Max(u, MinCapacity));
         }
 
-        public void AddEdge (int from, int to)
+        public void AddArc (int from, int to)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(from);
             ArgumentOutOfRangeException.ThrowIfNegative(to);
@@ -57,7 +57,7 @@ namespace ComputerScience.DataStructures.Graphs
             EdgeCount++;
         }
 
-        public void AddEdge (int from, int to, TEdgeWeight w)
+        public void AddArc (int from, int to, TEdgeWeight w)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(from);
             ArgumentOutOfRangeException.ThrowIfNegative(to);
@@ -70,12 +70,9 @@ namespace ComputerScience.DataStructures.Graphs
             }
 
             EnsureVertexCount(Math.Max(from, to)+1);
-            if ( EdgeCount == EdgeCapacity )
-            {
-                SizeUpEdges();
-            }
+			EnsureEdgeCapacity(EdgeCount+1);
 
-            targets[EdgeCount] = to;
+			targets[EdgeCount] = to;
             nexts[EdgeCount] = heads[from];
             heads[from] = EdgeCount;
             weights[EdgeCount] = w;
@@ -208,20 +205,6 @@ namespace ComputerScience.DataStructures.Graphs
 				}
                 VertexCount = count;
 			}
-        }
-
-        private void SizeUpEdges ()
-        {
-            EdgeCapacity *= 2;
-
-            Array.Resize(ref targets, EdgeCapacity);
-            Array.Resize(ref nexts, EdgeCapacity);
-
-            if ( HasWeight
-                && weights != null )
-            {
-                Array.Resize(ref weights, EdgeCapacity);
-            }
         }
 
         private void FullArray (int[] arr, int start, int end, int value)

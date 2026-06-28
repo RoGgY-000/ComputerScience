@@ -12,7 +12,7 @@ namespace ComputerScience.Core
                 GraphBuilder<Empty, Empty> gb = new(1000, 4995);
                 for ( int i = 0; i < 4995; i++ )
                 {
-                    gb.AddEdge(RandomNumberGenerator.GetInt32(1000), RandomNumberGenerator.GetInt32(1000));
+                    gb.AddArc(RandomNumberGenerator.GetInt32(1000), RandomNumberGenerator.GetInt32(1000));
                 }
                 DateTime start = DateTime.Now;
                 Graph<Empty, Empty> g = gb.Build(GraphBuildingOptions.Default);
