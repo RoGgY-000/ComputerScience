@@ -137,7 +137,7 @@ namespace ComputerScience.DataStructures.Graphs
                 return field;
             }
         } = -1;
-        public float Density => (float) EdgeCount / (VertexCount * (VertexCount - 1));
+        public float Density => (float) (EdgeCount - ReflexiveEdgeCount - DuplicateEdgeCount) / (VertexCount * (VertexCount - 1));
 
 		internal Graph (int v, int[] from, int[] to, TEdgeWeight[]? w = null, TVertexData[]? d = null)
         {
