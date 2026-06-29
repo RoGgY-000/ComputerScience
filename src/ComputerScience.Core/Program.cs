@@ -46,35 +46,35 @@ namespace ComputerScience.Core
                 Console.WriteLine(dfs);
                 Console.WriteLine(bfs);
 
-                dfs = 0; 
+                dfs = 0;
                 bfs = 0;
-				start = DateTime.Now;
+                start = DateTime.Now;
                 for ( int i = 0; i < g.VertexCount; i++ )
-				{
-					for ( int j = 0; j < g.VertexCount; j++ )
-					{
-						if ( g.DFSIsReachable(i, j) )
-						{
-							dfs++;
-						}
-					}
-				}
-				Console.WriteLine(DateTime.Now - start);
-				start = DateTime.Now;
-			for ( int i = 0; i < g.VertexCount; i++ )
-			{
-					for ( int j = 0; j < g.VertexCount; j++ )
-					{
-						if ( g.BFSIsReachable(i, j) )
-						{
-							bfs++;
-						}
-					}
-				}
-				Console.WriteLine(DateTime.Now - start);
-				Console.WriteLine(dfs);
-				Console.WriteLine(bfs);
-			}
-		}
+                {
+                    for ( int j = 0; j < g.VertexCount; j++ )
+                    {
+                        if ( g.DFSIsReachable(i, j) )
+                        {
+                            dfs++;
+                        }
+                    }
+                }
+                Console.WriteLine(DateTime.Now - start);
+                start = DateTime.Now;
+                for ( int i = 0; i < g.VertexCount; i++ )
+                {
+                    for ( int j = 0; j < g.VertexCount; j++ )
+                    {
+                        if ( g.BFSIsReachable(i, j) )
+                        {
+                            bfs++;
+                        }
+                    }
+                }
+                Console.WriteLine(DateTime.Now - start);
+                Console.WriteLine(dfs);
+                Console.WriteLine(bfs);
+            }
+        }
 	}
 }
