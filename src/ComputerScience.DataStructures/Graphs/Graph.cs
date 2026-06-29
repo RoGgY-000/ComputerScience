@@ -201,13 +201,20 @@ namespace ComputerScience.DataStructures.Graphs
                 }
             }
             intPool.Return(neighborCount);
-            for ( int vertex = 0; vertex < VertexCount; vertex++ )
-            {
-                Span<int> neighbors = targets.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
-                Span<TEdgeWeight> localWeights = weights.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
-                neighbors.Sort(localWeights);
-            }
-        }
+			for ( int vertex = 0; vertex < VertexCount; vertex++ )
+			{
+				Span<int> neighbors = targets.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
+				if ( HasWeight )
+				{
+					Span<TEdgeWeight> neighborWeights = weights.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
+					neighbors.Sort(neighborWeights);
+				}
+				else
+				{
+					neighbors.Sort();
+				}
+			}
+		}
 
         internal Graph (int[] offsets, int[] targets, GraphBuildingOptionsFixed options, 
             TEdgeWeight[]? weights = null, TVertexData[]? data = null)
