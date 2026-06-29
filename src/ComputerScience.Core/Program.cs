@@ -9,8 +9,8 @@ namespace ComputerScience.Core
         {
             for ( int k = 0; k < 10; k++ )
             {
-                GraphBuilder<Empty, Empty> gb = new(1000, 4995);
-                for ( int i = 0; i < 4995; i++ )
+                GraphBuilder<Empty, Empty> gb = new(1000, 499500);
+                for ( int i = 0; i < 499500; i++ )
                 {
                     gb.AddArc(RandomNumberGenerator.GetInt32(1000), RandomNumberGenerator.GetInt32(1000));
                 }

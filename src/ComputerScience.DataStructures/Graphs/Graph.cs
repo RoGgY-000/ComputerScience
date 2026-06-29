@@ -36,11 +36,30 @@ namespace ComputerScience.DataStructures.Graphs
                 for ( int vertex = 0; vertex < VertexCount; vertex++ )
                 {
                     ReadOnlySpan<int> neighbors = GetNeighbors(vertex);
-                    foreach ( int neighbor in neighbors )
+                    int index = neighbors.BinarySearch(vertex);
+
+					if ( index >= 0)
                     {
-                        if ( vertex == neighbor )
+                        res++;
+                        int pointerLow = index-1, pointerHigh = index+1;
+                        bool flag = true;
+                        while ( flag )
                         {
-                            res++;
+                            if ((pointerLow < 0 || neighbors[pointerLow] != vertex)
+                                && (pointerHigh >= neighbors.Length || neighbors[pointerHigh] != vertex))
+                            {
+                                flag = false;
+                            }
+                            if ( pointerLow >= 0 && neighbors[pointerLow] == vertex )
+                            {
+                                res++;
+                                pointerLow--;
+                            }
+                            if ( pointerHigh < neighbors.Length && neighbors[pointerHigh] == vertex )
+                            {
+                                res++;
+                                pointerHigh++;
+                            }
                         }
                     }
                 }
