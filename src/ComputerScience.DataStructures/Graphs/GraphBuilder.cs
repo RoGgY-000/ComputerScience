@@ -105,7 +105,7 @@ namespace ComputerScience.DataStructures.Graphs
                 newWeights = new TEdgeWeight[EdgeCount];
             }
 
-            bool addReflexive = !options.alwaysReflexiveEdges && options.enableReflexiveEdges;
+            bool addReflexive = !options.alwaysReflexiveArcs && options.enableReflexiveArcs;
 
 			offsets[0] = 0;
             int pointer = heads[0];
@@ -113,7 +113,7 @@ namespace ComputerScience.DataStructures.Graphs
             while ( pointer != -1 )
             {
                 if ( addReflexive
-					|| (options.alwaysReflexiveEdges
+					|| (options.alwaysReflexiveArcs
                     && this.targets[pointer] != 0))
                 {
                     targets[current] = this.targets[pointer];
@@ -134,7 +134,7 @@ namespace ComputerScience.DataStructures.Graphs
                 while ( pointer != -1 )
                 {
                     if ( addReflexive
-					    || (options.alwaysReflexiveEdges
+					    || (options.alwaysReflexiveArcs
 					    && this.targets[pointer] != i) )
                     {
                         targets[offsets[i] + current] = this.targets[pointer];

@@ -16,15 +16,15 @@ namespace ComputerScience.DataStructures.Graphs
 		private readonly GraphBuildingOptionsFixed options;
 
         public int VertexCount { get; }
-        public int EdgeCount { get; }
+        public int ArcCount { get; }
         public bool HasWeight { get; }
         public bool HasVertexData { get; }
 
-        public bool IsAlwaysReflexive => options.alwaysReflexiveEdges;
-        public bool AllowReflexiveEdges => options.enableReflexiveEdges;
-        public bool AllowDuplicateEdges => options.enableDuplicateEdges;
+        public bool IsAlwaysReflexive => options.alwaysReflexiveArcs;
+        public bool AllowReflexiveEdges => options.enableReflexiveArcs;
+        public bool AllowDuplicateEdges => options.enableDuplicateArcs;
 
-        public int ReflexiveEdgeCount
+        public int ReflexiveArcCount
         {
             get
             {
@@ -67,7 +67,7 @@ namespace ComputerScience.DataStructures.Graphs
                 return field;
             }
         } = -1;
-        public int DuplicateEdgeCount
+        public int DuplicateArcCount
         {
             get
             {
@@ -76,45 +76,21 @@ namespace ComputerScience.DataStructures.Graphs
                     return field;
                 }
                 int res = 0;
-                int[] uniqueNeighbors = intPool.Rent(MaxVertexDegree);
-                int[] edgeCountPerNeighbor = intPool.Rent(MaxVertexDegree);
-                try
+                int currentNeighbor = -1;
+                for ( int vertex = 0; vertex < VertexCount; vertex++ )
                 {
-                    for ( int vertex = 0; vertex < VertexCount; vertex++ )
+                    ReadOnlySpan<int> neighbors = GetNeighbors(vertex);
+                    foreach ( int neighbor in neighbors )
                     {
-                        int uniqueNeighborCount = 0;
-                        uniqueNeighbors.AsSpan(0, MaxVertexDegree).Fill(-1);
-                        edgeCountPerNeighbor.AsSpan(0, MaxVertexDegree).Clear();
-                        ReadOnlySpan<int> neighbors = GetNeighbors(vertex);
-                        foreach ( int neighbor in neighbors )
+                        if ( currentNeighbor != neighbor )
                         {
-                            bool found = false;
-                            for ( int index = 0; index < uniqueNeighbors.Length && !found; index++ )
-                            {
-                                if ( uniqueNeighbors[index] == -1 )
-                                {
-                                    uniqueNeighbors[index] = neighbor;
-                                    uniqueNeighborCount++;
-                                    edgeCountPerNeighbor[index]++;
-                                    found = true;
-                                }
-                                else if ( uniqueNeighbors[index] == neighbor )
-                                {
-                                    edgeCountPerNeighbor[index]++;
-                                    found = true;
-                                }
-                            }
-                        }
-                        for ( int neighborIndex = 0; neighborIndex < uniqueNeighborCount; neighborIndex++ )
+                            currentNeighbor = neighbor;
+						}
+                        else
                         {
-                            res += edgeCountPerNeighbor[neighborIndex] - 1;
+                            res++;
                         }
                     }
-                }
-                finally
-                {
-                    intPool.Return(uniqueNeighbors);
-                    intPool.Return(edgeCountPerNeighbor);
                 }
                 field = res;
                 return field;
@@ -128,7 +104,7 @@ namespace ComputerScience.DataStructures.Graphs
                 {
                     return field;
                 }
-                field = (float) EdgeCount / VertexCount;
+                field = (float) ArcCount / VertexCount;
 				return field;
             }
         } = -1f;
@@ -151,7 +127,7 @@ namespace ComputerScience.DataStructures.Graphs
                 return field;
             }
         } = -1;
-        public float Density => (float) (EdgeCount - ReflexiveEdgeCount - DuplicateEdgeCount) / (VertexCount * (VertexCount - 1));
+        public float Density => (float) (ArcCount - ReflexiveArcCount - DuplicateArcCount) / (VertexCount * (VertexCount - 1));
 
 		internal Graph (int v, int[] from, int[] to, TEdgeWeight[]? w = null, TVertexData[]? d = null)
         {
@@ -173,10 +149,10 @@ namespace ComputerScience.DataStructures.Graphs
             int u = from.Length;
 
             VertexCount = v;
-            EdgeCount = u;
+            ArcCount = u;
 
             offsets = intPool.Rent(VertexCount + 1);
-            offsets[VertexCount] = EdgeCount;
+            offsets[VertexCount] = ArcCount;
             offsets.AsSpan(0, VertexCount).Clear();
 
 			int[] neighborCount = intPool.Rent(VertexCount);
@@ -194,7 +170,7 @@ namespace ComputerScience.DataStructures.Graphs
             }
 
             targets = intPool.Rent(u);
-            targets.AsSpan(0, EdgeCount).Clear();
+            targets.AsSpan(0, ArcCount).Clear();
 
 			HasWeight = typeof(TEdgeWeight) != typeof(Empty);
             HasVertexData = typeof(TVertexData) != typeof(Empty);
@@ -260,7 +236,7 @@ namespace ComputerScience.DataStructures.Graphs
             this.targets = targets;
 
             VertexCount = offsets.Length - 1;
-            EdgeCount = targets.Length;
+            ArcCount = targets.Length;
 
             this.options = options;
 
@@ -282,7 +258,7 @@ namespace ComputerScience.DataStructures.Graphs
         public override string ToString ()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"Граф имеет {VertexCount} вершин, {EdgeCount} ребёр.");
+            sb.AppendLine($"Граф имеет {VertexCount} вершин, {ArcCount} ребёр.");
             sb.Append(HasWeight ? "Граф является взвешенным и " : "Граф не является взвешенным и ");
             sb.AppendLine(HasVertexData ? "вершины содержат данные." : "вершины не содержат данные.");
             sb.Append(HasVertexData ? "Вершины графа в формате 'Вершина : данные вершины - " : "Вершины графа в формате 'Вершина - ");
@@ -431,7 +407,7 @@ namespace ComputerScience.DataStructures.Graphs
 
 			try
             {
-                GraphBuilder<TEdgeWeight, TVertexData> builder = new(1, EdgeCount);
+                GraphBuilder<TEdgeWeight, TVertexData> builder = new(1, ArcCount);
 				Enqueue(v);
                 while ( qEnd > qStart )
                 {

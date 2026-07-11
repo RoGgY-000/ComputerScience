@@ -8,15 +8,15 @@ namespace ComputerScience.DataStructures.Graphs
 
     public readonly struct GraphBuildingOptionsFixed
     {
-		internal readonly bool alwaysReflexiveEdges;
-		internal readonly bool enableReflexiveEdges;
-		internal readonly bool enableDuplicateEdges;
+		internal readonly bool alwaysReflexiveArcs;
+		internal readonly bool enableReflexiveArcs;
+		internal readonly bool enableDuplicateArcs;
 
 		internal GraphBuildingOptionsFixed (bool alwaysReflexive, bool enableReflexive, bool enableDuplicate)
 		{
-			alwaysReflexiveEdges = alwaysReflexive;
-			enableReflexiveEdges = enableReflexive;
-			enableDuplicateEdges = enableDuplicate;
+			alwaysReflexiveArcs = alwaysReflexive;
+			enableReflexiveArcs = enableReflexive;
+			enableDuplicateArcs = enableDuplicate;
 		}
 	}
 }
