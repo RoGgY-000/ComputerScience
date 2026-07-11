@@ -24,7 +24,7 @@ namespace ComputerScience.DataStructures.Graphs
         public bool AllowReflexiveEdges => options.enableReflexiveArcs;
         public bool AllowDuplicateEdges => options.enableDuplicateArcs;
 
-        public int ReflexiveArcCount
+        public int ReflexiveVertexCount
         {
             get
             {
@@ -127,7 +127,7 @@ namespace ComputerScience.DataStructures.Graphs
                 return field;
             }
         } = -1;
-        public float Density => (float) (ArcCount - ReflexiveArcCount - DuplicateArcCount) / (VertexCount * (VertexCount - 1));
+        public float Density => (float) (ArcCount - ReflexiveVertexCount - DuplicateArcCount) / (VertexCount * (VertexCount - 1));
 
 		internal Graph (int v, int[] from, int[] to, TEdgeWeight[]? w = null, TVertexData[]? d = null)
         {
