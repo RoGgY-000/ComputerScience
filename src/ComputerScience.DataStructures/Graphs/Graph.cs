@@ -28,7 +28,7 @@ namespace ComputerScience.DataStructures.Graphs
         {
             get
             {
-                if ( field != -1 )
+                if ( field > -1 )
                 {
                     return field;
                 }
@@ -71,7 +71,7 @@ namespace ComputerScience.DataStructures.Graphs
         {
             get
             {
-                if ( field != -1 )
+                if ( field > -1 )
                 {
                     return field;
                 }
