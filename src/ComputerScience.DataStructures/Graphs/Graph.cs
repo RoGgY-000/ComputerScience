@@ -41,26 +41,6 @@ namespace ComputerScience.DataStructures.Graphs
 					if ( index >= 0)
                     {
                         res++;
-                        int pointerLow = index-1, pointerHigh = index+1;
-                        bool flag = true;
-                        while ( flag )
-                        {
-                            if ((pointerLow < 0 || neighbors[pointerLow] != vertex)
-                                && (pointerHigh >= neighbors.Length || neighbors[pointerHigh] != vertex))
-                            {
-                                flag = false;
-                            }
-                            if ( pointerLow >= 0 && neighbors[pointerLow] == vertex )
-                            {
-                                res++;
-                                pointerLow--;
-                            }
-                            if ( pointerHigh < neighbors.Length && neighbors[pointerHigh] == vertex )
-                            {
-                                res++;
-                                pointerHigh++;
-                            }
-                        }
                     }
                 }
                 field = res;
