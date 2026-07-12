@@ -316,9 +316,9 @@ namespace ComputerScience.DataStructures.Graphs
         public bool BFSIsReachable (int start, int end)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(start);
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(start, VertexCount);
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(start, VertexCount);
             ArgumentOutOfRangeException.ThrowIfNegative(end);
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(end, VertexCount);
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(end, VertexCount);
 
             if ( IsAlwaysReflexive
                 && start == end )
@@ -331,25 +331,26 @@ namespace ComputerScience.DataStructures.Graphs
             int[] queue = intPool.Rent(VertexCount);
             visited.AsSpan(0, VertexCount).Clear();
 			queue.AsSpan(0, VertexCount).Clear();
-			bool found = false;
             try
             {
                 Enqueue(start);
                 visited[start] = 1;
-                while ( qEnd - qStart > 0 && !found)
+                while ( qEnd - qStart > 0 )
                 {
                     int curr = Dequeue();
                     ReadOnlySpan<int> neighbors = GetNeighbors(curr);
+                    if ( neighbors.BinarySearch(end) >= 0 )
+                    {
+                        return true;
+                    }
                     for ( int i = 0; i < neighbors.Length; i++ )
                     {
-                        if ( neighbors[i] == end )
+                        int neighbor = neighbors[i];
+
+                        if ( visited[neighbor] == 0 )
                         {
-                            found = true;
-                        }
-                        if ( visited[neighbors[i]] == 0 )
-                        {
-                            Enqueue(neighbors[i]);
-                            visited[neighbors[i]] = 1;
+                            Enqueue(neighbor);
+                            visited[neighbor] = 1;
                         }
                     }
                 }
@@ -359,7 +360,7 @@ namespace ComputerScience.DataStructures.Graphs
                 intPool.Return(visited);
                 intPool.Return(queue);
             }
-            return found;
+            return false;
 
             void Enqueue (int el)
             {
@@ -478,9 +479,9 @@ namespace ComputerScience.DataStructures.Graphs
 		public bool DFSIsReachable (int start, int end)
         {
 			ArgumentOutOfRangeException.ThrowIfNegative(start);
-			ArgumentOutOfRangeException.ThrowIfGreaterThan(start, VertexCount);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(start, VertexCount);
 			ArgumentOutOfRangeException.ThrowIfNegative(end);
-			ArgumentOutOfRangeException.ThrowIfGreaterThan(end, VertexCount);
+			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(end, VertexCount);
 
 			if ( IsAlwaysReflexive
 				&& start == end )
@@ -489,7 +490,6 @@ namespace ComputerScience.DataStructures.Graphs
 			}
 
             int stackEnd = 0;
-			bool found = false;
 			int[] visited = intPool.Rent(VertexCount);
 			int[] stack = intPool.Rent(VertexCount);
 			visited.AsSpan(0, VertexCount).Clear();
@@ -498,34 +498,35 @@ namespace ComputerScience.DataStructures.Graphs
             try
             {
                 Push(start);
-                while ( stackEnd > 0 && !found )
+				visited[start] = 1;
+				while ( stackEnd > 0 )
                 {
                     int curr = Pop();
-                    if ( visited[curr] <= 1 )
+                    visited[curr] = 1;
+                    ReadOnlySpan<int> neighbors = GetNeighbors(curr);
+                    if ( neighbors.BinarySearch(end) >= 0 )
                     {
-                        visited[curr] = 2;
-                        ReadOnlySpan<int> neighbors = GetNeighbors(curr);
-                        for ( int i = 0; i < neighbors.Length && !found; i++ )
+                        return true;
+                    }
+					for ( int i = 0; i < neighbors.Length; i++ )
+                    {
+                        int neighbor = neighbors[i];
+
+                        if ( visited[neighbor] == 0 )
                         {
-                            if ( neighbors[i] == end )
-                            {
-                                found = true;
-                            }
-                            else if ( visited[neighbors[i]] == 0 )
-                            {
-                                visited[neighbors[i]] = 1;
-                                Push(neighbors[i]);
-                            }
+                            Push(neighbor);
+                            visited[neighbor] = 1;
                         }
                     }
                 }
-            }
+				return false;
+			}
             finally
             {
                 intPool.Return(visited);
                 intPool.Return(stack);
             }
-            return found;
+
             void Push (int el)
             {
                 stack[stackEnd++] = el;
