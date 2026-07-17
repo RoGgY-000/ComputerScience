@@ -1,9 +1,9 @@
 ﻿namespace ComputerScience.DataStructures.Graphs
 {
-    public struct Empty;
+	public struct Empty;
 
-    public readonly struct GraphBuildingOptionsFixed
-    {
+	public readonly struct GraphBuildingOptionsFixed
+	{
 		internal readonly bool alwaysReflexiveArcs;
 		internal readonly bool enableReflexiveArcs;
 		internal readonly bool enableDuplicateArcs;

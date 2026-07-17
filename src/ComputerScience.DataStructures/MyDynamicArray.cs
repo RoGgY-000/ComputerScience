@@ -6,13 +6,13 @@ namespace ComputerScience.DataStructures
 	public class MyDynamicArray<T> : ICollection<T>
 	{
 		public int Count { get; private set; }
-		public int Capacity => array.Length;
+		public int Capacity => _array.Length;
 
 		public bool IsReadOnly => throw new NotImplementedException();
 
 		private const int DefaultCapacity = 8;
 		private readonly ArrayPool<T> _pool = ArrayPool<T>.Shared;
-		private T?[] array;
+		private T[] _array;
 
 		public MyDynamicArray () : this(DefaultCapacity) { }
 
@@ -22,9 +22,9 @@ namespace ComputerScience.DataStructures
 
 			if ( capacity == 0 )
 			{
-				array = Array.Empty<T>();
+				_array = Array.Empty<T>();
 			}
-			array = _pool.Rent(capacity);
+			_array = _pool.Rent(capacity);
 			Count = capacity;
 		}
 
@@ -32,7 +32,7 @@ namespace ComputerScience.DataStructures
 		{
 			ArgumentNullException.ThrowIfNull(source);
 
-			array = _pool.Rent(DefaultCapacity);
+			_array = _pool.Rent(DefaultCapacity);
 			foreach ( T item in source )
 			{
 				Add(item);
@@ -44,7 +44,7 @@ namespace ComputerScience.DataStructures
 			ArgumentOutOfRangeException.ThrowIfNegative(capacity);
 			ArgumentNullException.ThrowIfNull(source);
 
-			array = _pool.Rent(capacity);
+			_array = _pool.Rent(capacity);
 			foreach ( T item in source )
 			{
 				Add(item);
@@ -57,16 +57,16 @@ namespace ComputerScience.DataStructures
 			{
 				SizeUp();
 			}
-			array[Count++] = item;
+			_array[Count++] = item;
 		}
 
-		public void Clear () => array.AsSpan().Clear();
+		public void Clear () => _array.AsSpan().Clear();
 
 		public bool Contains (T item)
 		{
 			ArgumentNullException.ThrowIfNull(item);
 
-			return array.AsSpan().Contains(item);
+			return _array.AsSpan().Contains(item);
 		}
 		// stopped here
 		public void CopyTo (T[] dest, int start)
@@ -75,37 +75,45 @@ namespace ComputerScience.DataStructures
 			ArgumentOutOfRangeException.ThrowIfNegative(start);
 			ArgumentOutOfRangeException.ThrowIfGreaterThan(start + Count, dest.Length);
 
-			array.AsSpan().CopyTo(dest);
-			for ( int i = 0; i < Count; i++ )
-			{
-				if ( array[i] != null )
-				{
-					dest[i] = array[i + start]!;
-				}
-			}
+			_array.AsSpan().CopyTo(dest);
 		}
 
-		public void Remove (T item)
+		public bool Remove (T item)
 		{
 			ArgumentNullException.ThrowIfNull(item);
 
+			int index = -1;
+			EqualityComparer<T> comparer = EqualityComparer<T>.Default;
 			for ( int i = 0; i < Count; i++ )
 			{
-				if ( array[i] is not null
-					&& item.Equals(array[i]) )
+				if ( comparer.Equals(item, _array[i]) )
 				{
-					array[i] = default;
+					index = i;
+					break;
 				}
 			}
+
+			if ( index < 0 )
+			{
+				return false;
+			}
+
+			for ( int i = index; i + 1 < Count; i++ )
+			{
+				_array[i] = _array[i + 1];
+			}
+
+			Count--;
+			return true;
 		}
 		private void SizeUp ()
 		{
-			T[] newArr = new T[Capacity * 2];
-			array.CopyTo(newArr, 0);
-			array = newArr;
+			T[] newArr = _pool.Rent(Capacity * 2);
+			_array.AsSpan().CopyTo(newArr);
+			_array = newArr;
+			_pool.Return(_array);
 		}
 
-		bool ICollection<T>.Remove (T item) => throw new NotImplementedException();
 		public IEnumerator<T> GetEnumerator () => throw new NotImplementedException();
 		IEnumerator IEnumerable.GetEnumerator () => GetEnumerator();
 	}
