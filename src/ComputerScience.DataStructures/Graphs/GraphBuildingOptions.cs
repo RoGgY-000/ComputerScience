@@ -2,46 +2,46 @@
 {
 	public class GraphBuildingOptions
 	{
-		private bool alwaysReflexiveEdges = false;
-		private bool enableReflexiveEdges = true;
-		private bool enableDuplicateEdges = true;
+		private bool _alwaysReflexiveEdges = false;
+		private bool _enableReflexiveEdges = true;
+		private bool _enableDuplicateEdges = true;
 
 		public static GraphBuildingOptionsFixed Default { get; } = new GraphBuildingOptions().Fix();
 
 		public GraphBuildingOptions AlwaysReflexiveEdges ()
 		{
-			alwaysReflexiveEdges = true;
+			_alwaysReflexiveEdges = true;
 			return this;
 		}
 		public GraphBuildingOptions NeverReflexiveEdges ()
 		{
-			alwaysReflexiveEdges = false;
+			_alwaysReflexiveEdges = false;
 			return this;
 		}
 		public GraphBuildingOptions EnableReflexiveEdges ()
 		{
-			enableReflexiveEdges = true;
+			_enableReflexiveEdges = true;
 			return this;
 		}
 		public GraphBuildingOptions DisableReflexiveEdges ()
 		{
-			enableReflexiveEdges = false;
+			_enableReflexiveEdges = false;
 			return this;
 		}
 		public GraphBuildingOptions EnableDuplicateEdges ()
 		{
-			enableDuplicateEdges = true;
+			_enableDuplicateEdges = true;
 			return this;
 		}
 		public GraphBuildingOptions DisableDuplicateEdges ()
 		{
-			enableDuplicateEdges = false;
+			_enableDuplicateEdges = false;
 			return this;
 		}
 
 		public GraphBuildingOptionsFixed Fix ()
 		{
-			GraphBuildingOptionsFixed options = new(alwaysReflexiveEdges, enableReflexiveEdges, enableDuplicateEdges);
+			GraphBuildingOptionsFixed options = new(_alwaysReflexiveEdges, _enableReflexiveEdges, _enableDuplicateEdges);
 			return options;
 		}
 	}
