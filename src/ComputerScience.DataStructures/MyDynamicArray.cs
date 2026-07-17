@@ -1,136 +1,112 @@
-﻿using System;
+﻿using System.Buffers;
 using System.Collections;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ComputerScience.DataStructures
 {
-    public class MyDynamicArray<T> : ICollection<T>
-    {
-        private const int defaultCapacity = 4;
-        private T?[] array;
+	public class MyDynamicArray<T> : ICollection<T>
+	{
+		public int Count { get; private set; }
+		public int Capacity => array.Length;
 
-        public int Count { get; private set;  }
-        public int Capacity => array.Length;
+		public bool IsReadOnly => throw new NotImplementedException();
 
-        public bool IsReadOnly => throw new NotImplementedException();
+		private const int DefaultCapacity = 8;
+		private readonly ArrayPool<T> _pool = ArrayPool<T>.Shared;
+		private T?[] array;
 
-        public MyDynamicArray () : this (defaultCapacity) { }
+		public MyDynamicArray () : this(DefaultCapacity) { }
 
-        public MyDynamicArray (int capacity)
-        {
-            if (capacity < 0)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
-            if ( capacity == 0 )
-            {
-                array = Array.Empty<T>();
-            }
-            array = new T[capacity];
-            Count = capacity;
-        }
+		public MyDynamicArray (int capacity)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(capacity);
 
-        public MyDynamicArray (IEnumerable<T> source)
-        {
-            Count = source.Count();
-            array = new T?[Count];
-            int i = 0;
-            foreach ( T item in source )
-            {
-                array[i] = item;
-            }
-        }
+			if ( capacity == 0 )
+			{
+				array = Array.Empty<T>();
+			}
+			array = _pool.Rent(capacity);
+			Count = capacity;
+		}
 
-        public MyDynamicArray (int capacity, IEnumerable<T> source)
-        {
-            Count = source.Count();
-            if ( capacity < 0
-                || capacity > Count )
-            {
-                throw new IndexOutOfRangeException();
-            }
-            array = new T?[capacity];
-            int i = 0;
-            foreach ( T item in source )
-            {
-                array[i] = item;
-            }
-        }
+		public MyDynamicArray (IEnumerable<T> source)
+		{
+			ArgumentNullException.ThrowIfNull(source);
 
-        public void Add (T item)
-        {
-            if ( Count == Capacity )
-            {
-                SizeUp();
-            }
-            array[Count++] = item;
-        }
+			array = _pool.Rent(DefaultCapacity);
+			foreach ( T item in source )
+			{
+				Add(item);
+			}
+		}
 
-        public void Clear ()
-        {
-            for ( int i = 0; i < Count; i++ )
-            {
-                array[i] = default;
-            }
-        }
+		public MyDynamicArray (int capacity, IEnumerable<T> source)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(capacity);
+			ArgumentNullException.ThrowIfNull(source);
 
-        public bool Contains (T item)
-        {
-            if ( item == null )
-            {
-                throw new ArgumentNullException();
-            }
-            for ( int i = 0; i < Count; i++ )
-            {
-                if ( item.Equals(array[i]) )
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
+			array = _pool.Rent(capacity);
+			foreach ( T item in source )
+			{
+				Add(item);
+			}
+		}
 
-        public void CopyTo (T[] dest, int arrayIndex)
-        {
-            if ( arrayIndex < 0
-                || arrayIndex + Count > dest.Length )
-            {
-                throw new IndexOutOfRangeException();
-            }
-            if ( dest == null )
-            {
-                throw new ArgumentNullException();
-            }
-            for ( int i = 0; i < Count; i++ )
-            {
-                if ( array[i] != null )
-                {
-                    dest[i] = array[i + arrayIndex]!;
-                }
-            }
-        }
+		public void Add (T item)
+		{
+			if ( Count == Capacity )
+			{
+				SizeUp();
+			}
+			array[Count++] = item;
+		}
 
-        public void Remove (T item)
-        {
-            for ( int i = 0; i < Count; i++ )
-            {
-                if ( array[i] is not null
-                    && item.Equals(array[i]) )
-                {
-                    array[i] = default;
-                }
-            }
-        }
-        public void SizeUp ()
-        {
-            T[] newArr = new T[Capacity*2];
-            array.CopyTo(newArr, 0);
-            array = newArr;
-        }
+		public void Clear () => array.AsSpan().Clear();
 
-        bool ICollection<T>.Remove (T item) => throw new NotImplementedException();
-        public IEnumerator<T> GetEnumerator () => throw new NotImplementedException();
-        IEnumerator IEnumerable.GetEnumerator () => GetEnumerator();
-    }
+		public bool Contains (T item)
+		{
+			ArgumentNullException.ThrowIfNull(item);
+
+			return array.AsSpan().Contains(item);
+		}
+		// stopped here
+		public void CopyTo (T[] dest, int start)
+		{
+			ArgumentNullException.ThrowIfNull(dest);
+			ArgumentOutOfRangeException.ThrowIfNegative(start);
+			ArgumentOutOfRangeException.ThrowIfGreaterThan(start + Count, dest.Length);
+
+			array.AsSpan().CopyTo(dest);
+			for ( int i = 0; i < Count; i++ )
+			{
+				if ( array[i] != null )
+				{
+					dest[i] = array[i + start]!;
+				}
+			}
+		}
+
+		public void Remove (T item)
+		{
+			ArgumentNullException.ThrowIfNull(item);
+
+			for ( int i = 0; i < Count; i++ )
+			{
+				if ( array[i] is not null
+					&& item.Equals(array[i]) )
+				{
+					array[i] = default;
+				}
+			}
+		}
+		private void SizeUp ()
+		{
+			T[] newArr = new T[Capacity * 2];
+			array.CopyTo(newArr, 0);
+			array = newArr;
+		}
+
+		bool ICollection<T>.Remove (T item) => throw new NotImplementedException();
+		public IEnumerator<T> GetEnumerator () => throw new NotImplementedException();
+		IEnumerator IEnumerable.GetEnumerator () => GetEnumerator();
+	}
 }
