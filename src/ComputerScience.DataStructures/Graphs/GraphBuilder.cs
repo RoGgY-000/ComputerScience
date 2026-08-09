@@ -45,12 +45,8 @@
 			EnsureVertexCount(Math.Max(from, to) + 1);
 			EnsureEdgeCapacity(EdgeCount + 1);
 
-			_targets[EdgeCount] = to;
-			_nexts[EdgeCount] = _heads[from];
-			_heads[from] = EdgeCount;
-
-			EdgeCount++;
-		}
+            InsertArc(from, to);
+        }
 
 		public void AddArc (int from, int to, TEdgeWeight w)
 		{
@@ -67,12 +63,44 @@
 			EnsureVertexCount(Math.Max(from, to) + 1);
 			EnsureEdgeCapacity(EdgeCount + 1);
 
-			_targets[EdgeCount] = to;
-			_nexts[EdgeCount] = _heads[from];
-			_heads[from] = EdgeCount;
-			_weights[EdgeCount] = w;
+            InsertArc(from, to, w);
+        }
 
-			EdgeCount++;
+        public void AddEdge (int v1, int v2)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(v1);
+            ArgumentOutOfRangeException.ThrowIfNegative(v2);
+
+            if ( HasWeight
+                || weights != null )
+            {
+                throw new InvalidOperationException();
+            }
+
+            EnsureVertexCount(Math.Max(v1, v2)+1);
+            EnsureEdgeCapacity(EdgeCount + 2);
+
+            InsertArc(v1, v2);
+            InsertArc(v2, v1);
+		}
+
+        public void AddEdge (int v1, int v2, TEdgeWeight w)
+        {
+			ArgumentOutOfRangeException.ThrowIfNegative(v1);
+			ArgumentOutOfRangeException.ThrowIfNegative(v2);
+            ArgumentNullException.ThrowIfNull(w);
+
+            if ( !HasWeight
+                || weights == null )
+            {
+                throw new InvalidOperationException();
+            }
+
+            EnsureVertexCount(Math.Max(v1, v2) + 1);
+            EnsureEdgeCapacity(EdgeCount + 2);
+
+			InsertArc(v1, v2, w);
+			InsertArc(v2, v1, w);
 		}
 
 		public void SetVertexData (int v, TVertexData d)
@@ -200,6 +228,23 @@
 				}
 				VertexCount = count;
 			}
+        }
+
+        private void InsertArc (int from, int to)
+        {
+			targets[EdgeCount] = to;
+			nexts[EdgeCount] = heads[from];
+			heads[from] = EdgeCount;
+			EdgeCount++;
 		}
-	}
+
+        private void InsertArc (int from, int to, TEdgeWeight w)
+        {
+			targets[EdgeCount] = to;
+			nexts[EdgeCount] = heads[from];
+			heads[from] = EdgeCount;
+            weights![EdgeCount] = w;
+			EdgeCount++;
+		}
+    }
 }
