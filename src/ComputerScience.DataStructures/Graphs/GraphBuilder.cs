@@ -4,7 +4,6 @@
 	{
 		private const int MinCapacity = 4;
 
-
 		public bool HasWeight { get; }
 		public bool HasVertexData { get; }
 
@@ -72,7 +71,7 @@
             ArgumentOutOfRangeException.ThrowIfNegative(v2);
 
             if ( HasWeight
-                || weights != null )
+                || _weights != null )
             {
                 throw new InvalidOperationException();
             }
@@ -91,7 +90,7 @@
             ArgumentNullException.ThrowIfNull(w);
 
             if ( !HasWeight
-                || weights == null )
+                || _weights == null )
             {
                 throw new InvalidOperationException();
             }
@@ -119,7 +118,7 @@
 		public Graph<TEdgeWeight, TVertexData> Build (GraphBuildingOptionsFixed options)
 		{
 			int[] offsets = new int[VertexCount + 1];
-			int[] targets = new int[EdgeCount];
+			int[] _targets = new int[EdgeCount];
 			offsets[VertexCount] = EdgeCount;
 			TEdgeWeight[]? newWeights = null;
 			if ( HasWeight
@@ -139,7 +138,7 @@
 					|| (options.alwaysReflexiveArcs
 					&& this._targets[pointer] != 0) )
 				{
-					targets[current] = this._targets[pointer];
+					_targets[current] = this._targets[pointer];
 					current++;
 					if ( HasWeight )
 					{
@@ -160,7 +159,7 @@
 						|| (options.alwaysReflexiveArcs
 						&& this._targets[pointer] != i) )
 					{
-						targets[offsets[i] + current] = this._targets[pointer];
+						_targets[offsets[i] + current] = this._targets[pointer];
 						current++;
 						if ( HasWeight )
 						{
@@ -170,7 +169,7 @@
 					pointer = _nexts[pointer];
 				}
 			}
-			Graph<TEdgeWeight, TVertexData> g = new(offsets, targets, options, newWeights, _data);
+			Graph<TEdgeWeight, TVertexData> g = new(offsets, _targets, options, newWeights, _data);
 			return g;
 		}
 
@@ -232,18 +231,18 @@
 
         private void InsertArc (int from, int to)
         {
-			targets[EdgeCount] = to;
-			nexts[EdgeCount] = heads[from];
-			heads[from] = EdgeCount;
+			_targets[EdgeCount] = to;
+			_nexts[EdgeCount] = _heads[from];
+			_heads[from] = EdgeCount;
 			EdgeCount++;
 		}
 
         private void InsertArc (int from, int to, TEdgeWeight w)
         {
-			targets[EdgeCount] = to;
-			nexts[EdgeCount] = heads[from];
-			heads[from] = EdgeCount;
-            weights![EdgeCount] = w;
+			_targets[EdgeCount] = to;
+			_nexts[EdgeCount] = _heads[from];
+			_heads[from] = EdgeCount;
+            _weights![EdgeCount] = w;
 			EdgeCount++;
 		}
     }

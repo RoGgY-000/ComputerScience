@@ -6,23 +6,23 @@ namespace ComputerScience.DataStructures.Graphs
 {
 	public class Graph<TEdgeWeight, TVertexData>
 	{
-		private readonly int[] offsets;
-		private readonly int[] targets;
-		private readonly TEdgeWeight[]? weights;
-		private readonly TVertexData[]? data;
+		private readonly int[] _offsets;
+		private readonly int[] _targets;
+		private readonly TEdgeWeight[]? _weights;
+		private readonly TVertexData[]? _data;
 
-		private readonly ArrayPool<int> intPool = ArrayPool<int>.Shared;
+		private readonly ArrayPool<int> _intPool = ArrayPool<int>.Shared;
 
-		private readonly GraphBuildingOptionsFixed options;
+		private readonly GraphBuildingOptionsFixed _options;
 
 		public int VertexCount { get; }
 		public int ArcCount { get; }
 		public bool HasWeight { get; }
 		public bool HasVertexData { get; }
 
-		public bool IsAlwaysReflexive => options.alwaysReflexiveArcs;
-		public bool AllowReflexiveEdges => options.enableReflexiveArcs;
-		public bool AllowDuplicateEdges => options.enableDuplicateArcs;
+		public bool IsAlwaysReflexive => _options.alwaysReflexiveArcs;
+		public bool AllowReflexiveEdges => _options.enableReflexiveArcs;
+		public bool AllowDuplicateEdges => _options.enableDuplicateArcs;
 
 		public int ReflexiveVertexCount
 		{
@@ -99,7 +99,7 @@ namespace ComputerScience.DataStructures.Graphs
 				int max = 0;
 				for ( int vertex = 0; vertex < VertexCount; vertex++ )
 				{
-					int neighborCount = offsets[vertex + 1] - offsets[vertex];
+					int neighborCount = _offsets[vertex + 1] - _offsets[vertex];
 
 					max = Math.Max(max, neighborCount);
 				}
@@ -131,11 +131,11 @@ namespace ComputerScience.DataStructures.Graphs
 			VertexCount = v;
 			ArcCount = u;
 
-			offsets = intPool.Rent(VertexCount + 1);
-			offsets[VertexCount] = ArcCount;
-			offsets.AsSpan(0, VertexCount).Clear();
+			_offsets = _intPool.Rent(VertexCount + 1);
+			_offsets[VertexCount] = ArcCount;
+			_offsets.AsSpan(0, VertexCount).Clear();
 
-			int[] neighborCount = intPool.Rent(VertexCount);
+			int[] neighborCount = _intPool.Rent(VertexCount);
 			neighborCount.AsSpan(0, VertexCount).Clear();
 
 			for ( int i = 0; i < u; i++ )
@@ -146,42 +146,42 @@ namespace ComputerScience.DataStructures.Graphs
 
 			for ( int i = 1; i < VertexCount; i++ )
 			{
-				offsets[i] = neighborCount[i - 1] + offsets[i - 1];
+				_offsets[i] = neighborCount[i - 1] + _offsets[i - 1];
 			}
 
-			targets = intPool.Rent(u);
-			targets.AsSpan(0, ArcCount).Clear();
+			_targets = _intPool.Rent(u);
+			_targets.AsSpan(0, ArcCount).Clear();
 
 			HasWeight = typeof(TEdgeWeight) != typeof(Empty);
 			HasVertexData = typeof(TVertexData) != typeof(Empty);
 
 			if ( HasWeight )
 			{
-				weights = new TEdgeWeight[u];
+				_weights = new TEdgeWeight[u];
 			}
 			if ( HasVertexData )
 			{
-				data = d;
+				_data = d;
 			}
 
 			for ( int i = 0; i < u; i++ )
 			{
 				int originVertex = from[i];
-				int originOffset = offsets[originVertex];
+				int originOffset = _offsets[originVertex];
 				int originNeighbors = --neighborCount[originVertex];
-				targets[originOffset + originNeighbors] = to[i];
+				_targets[originOffset + originNeighbors] = to[i];
 				if ( HasWeight )
 				{
-					weights![originOffset + originNeighbors] = w![i];
+					_weights![originOffset + originNeighbors] = w![i];
 				}
 			}
-			intPool.Return(neighborCount);
+			_intPool.Return(neighborCount);
 			for ( int vertex = 0; vertex < VertexCount; vertex++ )
 			{
-				Span<int> neighbors = targets.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
+				Span<int> neighbors = _targets.AsSpan(_offsets[vertex], _offsets[vertex + 1] - _offsets[vertex]);
 				if ( HasWeight )
 				{
-					Span<TEdgeWeight> neighborWeights = weights.AsSpan(offsets[vertex], offsets[vertex + 1] - offsets[vertex]);
+					Span<TEdgeWeight> neighborWeights = _weights.AsSpan(_offsets[vertex], _offsets[vertex + 1] - _offsets[vertex]);
 					neighbors.Sort(neighborWeights);
 				}
 				else
@@ -202,23 +202,23 @@ namespace ComputerScience.DataStructures.Graphs
 				ArgumentNullException.ThrowIfNull(weights);
 				ArgumentOutOfRangeException.ThrowIfNotEqual(targets.Length, weights.Length);
 				HasWeight = true;
-				this.weights = weights;
+				this._weights = weights;
 			}
 			if ( typeof(TVertexData) != typeof(Empty) )
 			{
 				ArgumentNullException.ThrowIfNull(data);
 				ArgumentOutOfRangeException.ThrowIfNotEqual(offsets.Length, data.Length + 1);
 				HasVertexData = true;
-				this.data = data;
+				this._data = data;
 			}
 
-			this.offsets = offsets;
-			this.targets = targets;
+			this._offsets = offsets;
+			this._targets = targets;
 
 			VertexCount = offsets.Length - 1;
 			ArcCount = targets.Length;
 
-			this.options = options;
+			this._options = options;
 
 			for ( int vertex = 0; vertex < VertexCount; vertex++ )
 			{
@@ -245,21 +245,21 @@ namespace ComputerScience.DataStructures.Graphs
 			sb.AppendLine(HasWeight ? "(сосед1, вес1), (сосед2, вес2)...':" : "сосед1, сосед2,...':");
 			for ( int i = 0; i < VertexCount; i++ )
 			{
-				int currentOffset = offsets[i], nextOffset = i + 1 == VertexCount ? targets.Length : offsets[i + 1];
-				ReadOnlySpan<int> neighbors = targets.AsSpan(currentOffset, nextOffset - currentOffset);
+				int currentOffset = _offsets[i], nextOffset = i + 1 == VertexCount ? _targets.Length : _offsets[i + 1];
+				ReadOnlySpan<int> neighbors = _targets.AsSpan(currentOffset, nextOffset - currentOffset);
 				if ( !neighbors.IsEmpty )
 				{
 					sb.Append($"{i} ");
 					if ( HasVertexData )
 					{
-						sb.Append($": {data[i]} ");
+						sb.Append($": {_data[i]} ");
 					}
 					sb.Append("- ");
 					for ( int j = 0; j < neighbors.Length; j++ )
 					{
 						if ( HasWeight )
 						{
-							sb.Append($"({neighbors[j]}, {weights[currentOffset + j]}), ");
+							sb.Append($"({neighbors[j]}, {_weights[currentOffset + j]}), ");
 						}
 						else
 						{
@@ -277,25 +277,25 @@ namespace ComputerScience.DataStructures.Graphs
 		public ReadOnlySpan<int> GetNeighbors (int v)
 		{
 			ArgumentOutOfRangeException.ThrowIfNegative(v);
-			ArgumentOutOfRangeException.ThrowIfGreaterThan(v, offsets.Length - 1);
+			ArgumentOutOfRangeException.ThrowIfGreaterThan(v, _offsets.Length - 1);
 
-			return targets.AsSpan(offsets[v], offsets[v + 1] - offsets[v]);
+			return _targets.AsSpan(_offsets[v], _offsets[v + 1] - _offsets[v]);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ReadOnlySpan<TEdgeWeight> GetWeights (int v)
 		{
 			ArgumentOutOfRangeException.ThrowIfNegative(v);
-			ArgumentOutOfRangeException.ThrowIfGreaterThan(v, offsets.Length - 1);
+			ArgumentOutOfRangeException.ThrowIfGreaterThan(v, _offsets.Length - 1);
 
 			if ( !HasWeight )
 			{
 				throw new InvalidOperationException();
 			}
 
-			int start = offsets[v];
-			int end = offsets[v + 1];
-			ReadOnlySpan<TEdgeWeight> span = weights.AsSpan(start, end - start);
+			int start = _offsets[v];
+			int end = _offsets[v + 1];
+			ReadOnlySpan<TEdgeWeight> span = _weights.AsSpan(start, end - start);
 			return span;
 		}
 
@@ -303,13 +303,13 @@ namespace ComputerScience.DataStructures.Graphs
 		public TVertexData GetVertexData (int v)
 		{
 			ArgumentOutOfRangeException.ThrowIfNegative(v);
-			ArgumentOutOfRangeException.ThrowIfGreaterThan(v, offsets.Length - 1);
+			ArgumentOutOfRangeException.ThrowIfGreaterThan(v, _offsets.Length - 1);
 
 			if ( !HasVertexData )
 			{
 				throw new InvalidOperationException();
 			}
-			return data![v];
+			return _data![v];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -327,8 +327,8 @@ namespace ComputerScience.DataStructures.Graphs
 			}
 
 			int qStart = 0, qEnd = 0;
-			int[] visited = intPool.Rent(VertexCount);
-			int[] queue = intPool.Rent(VertexCount);
+			int[] visited = _intPool.Rent(VertexCount);
+			int[] queue = _intPool.Rent(VertexCount);
 			visited.AsSpan(0, VertexCount).Clear();
 			queue.AsSpan(0, VertexCount).Clear();
 			try
@@ -357,8 +357,8 @@ namespace ComputerScience.DataStructures.Graphs
 			}
 			finally
 			{
-				intPool.Return(visited);
-				intPool.Return(queue);
+				_intPool.Return(visited);
+				_intPool.Return(queue);
 			}
 			return false;
 
@@ -379,9 +379,9 @@ namespace ComputerScience.DataStructures.Graphs
 			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(v, VertexCount);
 
 			int visitedCount = 0, qStart = 0, qEnd = 0, newVertexCounter = 0;
-			int[] queue = intPool.Rent(VertexCount);
-			int[] visited = intPool.Rent(VertexCount);
-			int[] newVertexes = intPool.Rent(VertexCount);
+			int[] queue = _intPool.Rent(VertexCount);
+			int[] visited = _intPool.Rent(VertexCount);
+			int[] newVertexes = _intPool.Rent(VertexCount);
 			queue.AsSpan(0, VertexCount).Clear();
 			visited.AsSpan(0, VertexCount).Clear();
 			newVertexes.AsSpan(0, VertexCount).Clear();
@@ -407,13 +407,13 @@ namespace ComputerScience.DataStructures.Graphs
 						builder.AddArc(newVertexes[curr], newVertexes[neighbors[i]]);
 					}
 				}
-				return builder.Build(options);
+				return builder.Build(_options);
 			}
 			finally
 			{
-				intPool.Return(queue);
-				intPool.Return(visited);
-				intPool.Return(newVertexes);
+				_intPool.Return(queue);
+				_intPool.Return(visited);
+				_intPool.Return(newVertexes);
 			}
 
 			void Enqueue (int el)
@@ -430,8 +430,8 @@ namespace ComputerScience.DataStructures.Graphs
 		public void BFSAll (Action<int> action)
 		{
 			int visitedCount = 0, qStart = 0, qEnd = 0;
-			int[] queue = intPool.Rent(VertexCount);
-			int[] visited = intPool.Rent(VertexCount);
+			int[] queue = _intPool.Rent(VertexCount);
+			int[] visited = _intPool.Rent(VertexCount);
 			try
 			{
 				for ( int i = 0; i < VertexCount; i++ )
@@ -462,8 +462,8 @@ namespace ComputerScience.DataStructures.Graphs
 			}
 			finally
 			{
-				intPool.Return(queue);
-				intPool.Return(visited);
+				_intPool.Return(queue);
+				_intPool.Return(visited);
 			}
 			void Enqueue (int el)
 			{
@@ -490,8 +490,8 @@ namespace ComputerScience.DataStructures.Graphs
 			}
 
 			int stackEnd = 0;
-			int[] visited = intPool.Rent(VertexCount);
-			int[] stack = intPool.Rent(VertexCount);
+			int[] visited = _intPool.Rent(VertexCount);
+			int[] stack = _intPool.Rent(VertexCount);
 			visited.AsSpan(0, VertexCount).Clear();
 			stack.AsSpan(0, VertexCount).Clear();
 
@@ -523,8 +523,8 @@ namespace ComputerScience.DataStructures.Graphs
 			}
 			finally
 			{
-				intPool.Return(visited);
-				intPool.Return(stack);
+				_intPool.Return(visited);
+				_intPool.Return(stack);
 			}
 
 			void Push (int el)
