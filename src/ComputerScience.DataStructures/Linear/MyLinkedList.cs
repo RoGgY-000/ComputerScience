@@ -1,5 +1,5 @@
 ﻿using System.Collections;
-namespace ComputerScience.DataStructures
+namespace ComputerScience.DataStructures.Linear
 {
     public class MyLinkedList<T> : ICollection<T>, IList<T>
     {

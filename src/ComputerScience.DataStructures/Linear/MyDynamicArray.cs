@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
 using System.Collections;
 
-namespace ComputerScience.DataStructures
+namespace ComputerScience.DataStructures.Linear
 {
 	public class MyDynamicArray<T> : ICollection<T>
 	{
