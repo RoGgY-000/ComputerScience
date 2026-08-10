@@ -235,44 +235,6 @@ namespace ComputerScience.DataStructures.Graphs
 			}
 		}
 
-		public override string ToString ()
-		{
-			StringBuilder sb = new();
-			sb.AppendLine($"Граф имеет {VertexCount} вершин, {ArcCount} ребёр.");
-			sb.Append(HasWeight ? "Граф является взвешенным и " : "Граф не является взвешенным и ");
-			sb.AppendLine(HasVertexData ? "вершины содержат данные." : "вершины не содержат данные.");
-			sb.Append(HasVertexData ? "Вершины графа в формате 'Вершина : данные вершины - " : "Вершины графа в формате 'Вершина - ");
-			sb.AppendLine(HasWeight ? "(сосед1, вес1), (сосед2, вес2)...':" : "сосед1, сосед2,...':");
-			for ( int i = 0; i < VertexCount; i++ )
-			{
-				int currentOffset = _offsets[i], nextOffset = i + 1 == VertexCount ? _targets.Length : _offsets[i + 1];
-				ReadOnlySpan<int> neighbors = _targets.AsSpan(currentOffset, nextOffset - currentOffset);
-				if ( !neighbors.IsEmpty )
-				{
-					sb.Append($"{i} ");
-					if ( HasVertexData )
-					{
-						sb.Append($": {_data[i]} ");
-					}
-					sb.Append("- ");
-					for ( int j = 0; j < neighbors.Length; j++ )
-					{
-						if ( HasWeight )
-						{
-							sb.Append($"({neighbors[j]}, {_weights[currentOffset + j]}), ");
-						}
-						else
-						{
-							sb.Append($"{neighbors[j]}, ");
-						}
-					}
-					sb.Remove(sb.Length - 2, 2);
-					sb.AppendLine();
-				}
-			}
-			return sb.ToString();
-		}
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ReadOnlySpan<int> GetNeighbors (int v)
 		{
@@ -305,11 +267,7 @@ namespace ComputerScience.DataStructures.Graphs
 			ArgumentOutOfRangeException.ThrowIfNegative(v);
 			ArgumentOutOfRangeException.ThrowIfGreaterThan(v, _offsets.Length - 1);
 
-			if ( !HasVertexData )
-			{
-				throw new InvalidOperationException();
-			}
-			return _data![v];
+			return HasVertexData ? _data![v] : throw new InvalidOperationException();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -378,7 +336,7 @@ namespace ComputerScience.DataStructures.Graphs
 			ArgumentOutOfRangeException.ThrowIfNegative(v);
 			ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(v, VertexCount);
 
-			int visitedCount = 0, qStart = 0, qEnd = 0, newVertexCounter = 0;
+			int qStart = 0, qEnd = 0, newVertexCounter = 0;
 			int[] queue = _intPool.Rent(VertexCount);
 			int[] visited = _intPool.Rent(VertexCount);
 			int[] newVertexes = _intPool.Rent(VertexCount);

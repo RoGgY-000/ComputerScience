@@ -115,6 +115,8 @@
 			_data[v] = d;
 		}
 
+		public Graph<TEdgeWeight, TVertexData> Build () => Build(GraphBuildingOptions.Default);
+
 		public Graph<TEdgeWeight, TVertexData> Build (GraphBuildingOptionsFixed options)
 		{
 			int[] offsets = new int[VertexCount + 1];
